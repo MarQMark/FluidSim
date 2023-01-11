@@ -60,10 +60,14 @@ int WinMain() {
     Kikan::Texture2D texture2D(500, 500, data.data());
 
     //create Fluid
-    engine.getScene()->addEntity(createParticle(glm::vec2(25, 150), 10, 10, texture2D.get()));
-    for(int n = 0; n < 1; n++)
-        for(int i = 0; i < 10; i++)
-            engine.getScene()->addEntity(createParticle(glm::vec2(i * 10, 50 + n), 10, 10, texture2D.get()));
+    //engine.getScene()->addEntity(createParticle(glm::vec2(25, 150), 10, 10, texture2D.get()));
+    //for(int n = 0; n < 5; n++)
+    //    for(int i = 0; i < 100; i++)
+    //        engine.getScene()->addEntity(createParticle(glm::vec2(i * 10, 50 + n), 10, 10, texture2D.get()));
+    for (int i = 0; i < 300; ++i) {
+        engine.getScene()->addEntity(createParticle(glm::vec2(rand() % 200, rand() % 200), 10, 10, texture2D.get()));
+    }
+
 
     //draw grid
     engine.getScene()->addEntity(createLine(glm::vec2(-400, -1), 800, 2));

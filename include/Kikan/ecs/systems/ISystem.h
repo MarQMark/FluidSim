@@ -17,7 +17,7 @@ namespace Kikan {
     public:
         ISystem()= default;
 
-        ~ISystem(){
+        virtual ~ISystem(){
             for (auto signatures : _signatures) {
                 delete signatures;
             }
@@ -34,7 +34,7 @@ namespace Kikan {
         }
 
         void virtual removeEntity(Entity* entity){
-            for (int i = 0; i < _entities.size(); ++i) {
+            for (int i = 0; i < (int)_entities.size(); ++i) {
                 if(_entities.at(i) == entity){
                     _entities.erase(_entities.begin() + i);
                     return;

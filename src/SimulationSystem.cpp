@@ -1,11 +1,12 @@
 #include <iostream>
+#include <chrono>
 #include "FluidSim/SimulationSystem.h"
 #include "FluidSim/Particle.h"
 #include "Kikan/ecs/components/Texture2DSprite.h"
 
-#define RADIUS 10.0f
-#define SIGMA 0.1f
-#define BETA 0.f
+#define RADIUS 5.0f
+#define SIGMA 0.00000005f
+#define BETA 0.0000005f
 
 SimulationSystem::SimulationSystem() {
     singleInclude(Particle);
@@ -17,21 +18,62 @@ SimulationSystem::~SimulationSystem() {
     delete _grid;
 }
 
+int i = 0;
 void SimulationSystem::update(double dt) {
+    //if(!_input->keyPressed(Kikan::Key::R)){
+    //    i = 0;
+    //    return;
+    //}
+    //if(i != 0)
+    //    return;
+    //i++;
+
+    auto time = std::chrono::high_resolution_clock::now();
+
     apply_external_forces(dt);
+    if(_input->keyPressed(Kikan::Key::P))
+        std::cout << ((std::chrono::duration<double, std::milli>)(std::chrono::high_resolution_clock::now() - time)).count() << "   apply_external_forces" << std::endl;
+    time = std::chrono::high_resolution_clock::now();
+
     apply_viscosity(dt);
+    if(_input->keyPressed(Kikan::Key::P))
+        std::cout << ((std::chrono::duration<double, std::milli>)(std::chrono::high_resolution_clock::now() - time)).count() << "   apply_viscosity" << std::endl;
+    time = std::chrono::high_resolution_clock::now();
+
     advance_particles(dt);
+    if(_input->keyPressed(Kikan::Key::P))
+        std::cout << ((std::chrono::duration<double, std::milli>)(std::chrono::high_resolution_clock::now() - time)).count() << "   advance_particles" << std::endl;
+    time = std::chrono::high_resolution_clock::now();
+
     update_neighbours();
+    if(_input->keyPressed(Kikan::Key::P))
+        std::cout << ((std::chrono::duration<double, std::milli>)(std::chrono::high_resolution_clock::now() - time)).count() << "   update_neighbours" << std::endl;
+    time = std::chrono::high_resolution_clock::now();
+
     double_density_relaxation(dt);
+    if(_input->keyPressed(Kikan::Key::P))
+        std::cout << ((std::chrono::duration<double, std::milli>)(std::chrono::high_resolution_clock::now() - time)).count() << "   double_density_relaxation" << std::endl;
+    time = std::chrono::high_resolution_clock::now();
+
     resolve_collisions();
+    if(_input->keyPressed(Kikan::Key::P))
+        std::cout << ((std::chrono::duration<double, std::milli>)(std::chrono::high_resolution_clock::now() - time)).count() << "   resolve_collisions" << std::endl;
+    time = std::chrono::high_resolution_clock::now();
+
     update_velocity(dt);
+    if(_input->keyPressed(Kikan::Key::P))
+        std::cout << ((std::chrono::duration<double, std::milli>)(std::chrono::high_resolution_clock::now() - time)).count() << "   update_velocity" << std::endl;
+    time = std::chrono::high_resolution_clock::now();
+
     update_sprite();
+    if(_input->keyPressed(Kikan::Key::P))
+        std::cout << ((std::chrono::duration<double, std::milli>)(std::chrono::high_resolution_clock::now() - time)).count() << "   update_sprite" << std::endl;
 }
 
 void SimulationSystem::apply_external_forces(double dt) {
     for (Kikan::Entity* entity : _entities) {
         auto* p = entity->getComponent<Particle>();
-        p->vel += glm::vec2(0, -.0010); // Gravity
+        p->vel += glm::vec2(0, -.0050); // Gravity
         // Add mouse input or other forces
     }
 }
@@ -52,6 +94,7 @@ void SimulationSystem::apply_viscosity(double dt) {
                 float q = length / RADIUS;
                 float k = .5f * dt * (1.f - q);
                 glm::vec2 I = k * (SIGMA * vel_i + BETA * vel_i * vel_i) * v_pn;
+                p->vel -= I;
             }
         }
     }
@@ -82,7 +125,7 @@ void SimulationSystem::update_neighbours() {
     }
 }
 
-#define STIFFNESS 0.000002f
+#define STIFFNESS 0.0000002f
 #define STIFFNESS_NEAR 0.000002f
 void SimulationSystem::double_density_relaxation(double dt) {
     for (auto* entity : _entities) {
@@ -107,6 +150,8 @@ void SimulationSystem::double_density_relaxation(double dt) {
             D = (float)(.5f * dt * dt * (P * q + P_near * q * q)) * v;
             n->pos = n->pos + D;
             delta = delta - D;
+            if(std::isnan(delta.x))
+                std::cout << "A" << std::endl;
         }
         p->pos = p->pos + D;
     }
@@ -116,10 +161,10 @@ void SimulationSystem::resolve_collisions() {
     for (auto* entity : _entities) {
         auto *p = entity->getComponent<Particle>();
 
-        p->pos.x = std::max(p->pos.x, 0.f);
-        p->pos.y = std::max(p->pos.y, 0.f);
-        p->pos.x = std::min(p->pos.x, 200.f);
-        p->pos.y = std::min(p->pos.y, 200.f);
+        p->pos.x = std::max(p->pos.x, 1.f);
+        p->pos.y = std::max(p->pos.y, 1.f);
+        p->pos.x = std::min(p->pos.x, 199.f);
+        p->pos.y = std::min(p->pos.y, 199.f);
     }
 }
 

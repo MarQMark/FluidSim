@@ -57,9 +57,9 @@ unsigned int Grid::grid_pos1D(glm::vec2 pos) {
     int y = (int)((pos.y * (float)_h) / _world_h);
 
     x = std::max(x, 0);
-    x = std::min(x, (int)_w);
+    x = std::min(x, (int)_w - 1);
     y = std::max(y, 0);
-    y = std::min(y, (int)_h);
+    y = std::min(y, (int)_h - 1);
 
     return x + y * _w;
 }

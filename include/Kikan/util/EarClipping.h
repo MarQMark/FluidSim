@@ -39,13 +39,13 @@ namespace Kikan {
 
         //create index list for all points
         std::vector<unsigned int> pointIndices(points.size());
-        for (int i = 0; i < points.size(); ++i)
+        for (int i = 0; i < (int)points.size(); ++i)
             pointIndices[i] = i;
 
         unsigned int triangleIndexCount = 0;
 
         while (pointIndices.size() > 3){
-            for (int i = 0; i < pointIndices.size(); ++i) {
+            for (int i = 0; i < (int)pointIndices.size(); ++i) {
                 unsigned int a = pointIndices[i];
                 unsigned int b = pointIndices[(i - 1 < 0 ? pointIndices.size() - 1 : i - 1)];
                 unsigned int c = pointIndices[i + 1];
@@ -63,7 +63,7 @@ namespace Kikan {
 
                 //test if new triangle contains any points
                 bool isEar = true;
-                for (int j = 0; j < points.size(); ++j) {
+                for (unsigned int j = 0; j < (unsigned int)points.size(); ++j) {
                     if(j == a || j == b || j == c)
                         continue;
 

@@ -11,7 +11,7 @@ namespace Kikan {
     public:
         Engine(){
             _renderer = new Renderer();
-            _input = new Input(_renderer->getWindow());
+            _input = Input::create(_renderer->getWindow());
             setCurrScene();
         }
 
