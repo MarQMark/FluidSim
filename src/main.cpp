@@ -40,6 +40,8 @@ Kikan::Entity* createLine(glm::vec2 pos, float w, float h){
     return entity;
 }
 
+#define TEXTURE_SIZE 500
+#define TEXTURE_SIZE_HALF (TEXTURE_SIZE / 2.f)
 int WinMain() {
     Kikan::Engine engine;
     engine.getRenderer()->shader()->changeFs(Kikan::Shader::loadShaderSource("shaders/main.frag"));
@@ -48,23 +50,23 @@ int WinMain() {
     engine.getScene()->addSystem(new SimulationSystem());
 
     //create Texture
-    std::vector<float> data(500 * 500 * 4);
-    for (int x = 0; x < 500; ++x) {
-        for (int y = 0; y < 500; ++y) {
-            data[(x + 500 * y) * 4] = 0.;
-            data[(x + 500 * y) * 4 + 1] = 0.;
-            data[(x + 500 * y) * 4 + 2] = 0.;
-            data[(x + 500 * y) * 4 + 3] = (float)(1.f - std::sqrt((x - 250) * (x - 250) + (y - 250) * (y - 250)) / 250.0);
+    std::vector<float> data(TEXTURE_SIZE * TEXTURE_SIZE * 4);
+    for (int x = 0; x < TEXTURE_SIZE; ++x) {
+        for (int y = 0; y < TEXTURE_SIZE; ++y) {
+            data[(x + TEXTURE_SIZE * y) * 4] = 0.;
+            data[(x + TEXTURE_SIZE * y) * 4 + 1] = 0.;
+            data[(x + TEXTURE_SIZE * y) * 4 + 2] = 0.;
+            data[(x + TEXTURE_SIZE * y) * 4 + 3] = (float)(1.f - std::sqrt((x - TEXTURE_SIZE_HALF) * (x - TEXTURE_SIZE_HALF) + (y - TEXTURE_SIZE_HALF) * (y - TEXTURE_SIZE_HALF)) / TEXTURE_SIZE_HALF);
         }
     }
-    Kikan::Texture2D texture2D(500, 500, data.data());
+    Kikan::Texture2D texture2D(TEXTURE_SIZE, TEXTURE_SIZE, data.data());
 
     //create Fluid
     //engine.getScene()->addEntity(createParticle(glm::vec2(25, 150), 10, 10, texture2D.get()));
     //for(int n = 0; n < 5; n++)
     //    for(int i = 0; i < 100; i++)
     //        engine.getScene()->addEntity(createParticle(glm::vec2(i * 10, 50 + n), 10, 10, texture2D.get()));
-    for (int i = 0; i < 300; ++i) {
+    for (int i = 0; i < 1000; ++i) {
         engine.getScene()->addEntity(createParticle(glm::vec2(rand() % 200, rand() % 200), 10, 10, texture2D.get()));
     }
 

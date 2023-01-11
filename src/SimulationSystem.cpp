@@ -6,7 +6,7 @@
 
 #define RADIUS 5.0f
 #define SIGMA 0.00000005f
-#define BETA 0.0000005f
+#define BETA 0.000000005f
 
 SimulationSystem::SimulationSystem() {
     singleInclude(Particle);
@@ -27,6 +27,8 @@ void SimulationSystem::update(double dt) {
     //if(i != 0)
     //    return;
     //i++;
+
+    dt = 33.3333;
 
     auto time = std::chrono::high_resolution_clock::now();
 
@@ -73,7 +75,7 @@ void SimulationSystem::update(double dt) {
 void SimulationSystem::apply_external_forces(double dt) {
     for (Kikan::Entity* entity : _entities) {
         auto* p = entity->getComponent<Particle>();
-        p->vel += glm::vec2(0, -.0050); // Gravity
+        p->vel += glm::vec2(0, -.005); // Gravity
         // Add mouse input or other forces
     }
 }
@@ -81,19 +83,20 @@ void SimulationSystem::apply_external_forces(double dt) {
 void SimulationSystem::apply_viscosity(double dt) {
     for (auto* entity : _entities) {
         auto* p = entity->getComponent<Particle>();
-        for (auto* entity2 : _entities) {
-            auto* n = entity2->getComponent<Particle>();
+        for (auto* n : _p_neighbours[p]) {
 
             glm::vec2 v_pn = n->pos - p->pos;
             glm::vec2 vel_i = (p->vel - n->vel) * v_pn;
 
             if(vel_i.x > 0 && vel_i.y > 0){
-                float length = glm::length(v_pn);
+                float length = std::max(glm::length(v_pn), 0.001f);
                 vel_i /= length;
                 v_pn /= length;
                 float q = length / RADIUS;
-                float k = .5f * dt * (1.f - q);
+                float k = .5f * (float)dt * (1.f - q);
                 glm::vec2 I = k * (SIGMA * vel_i + BETA * vel_i * vel_i) * v_pn;
+                if(std::isnan(I.x) || !std::isfinite(I.x))
+                    std::cout << "B" << std::endl;
                 p->vel -= I;
             }
         }
@@ -125,33 +128,47 @@ void SimulationSystem::update_neighbours() {
     }
 }
 
-#define STIFFNESS 0.0000002f
-#define STIFFNESS_NEAR 0.000002f
+#define STIFFNESS 0.00002f
+#define STIFFNESS_NEAR 0.0002f
 void SimulationSystem::double_density_relaxation(double dt) {
     for (auto* entity : _entities) {
         auto *p = entity->getComponent<Particle>();
 
-        float press = 0;
-        float press_near = 0;
+        double press = 0;
+        double press_near = 0;
 
         for (Particle* n : _p_neighbours[p]) {
-            float q = 1.f - std::max(glm::length(p->pos - n->pos), 0.001f) / RADIUS;
+            float q = 1.f - std::max(glm::length(p->pos - n->pos), 1e-10f) / RADIUS;
             press += q * q;
             press_near += q * q * q;
         }
+
+        press = std::max(press, -1e5);
+        press = std::min(press, 1e5);
+        press_near = std::max(press_near, -1e5);
+        press_near = std::min(press_near, 1e5);
+
         float P = STIFFNESS * (press - 50.f);//p0);
         float P_near = STIFFNESS_NEAR * press_near;
 
-        glm::vec2 D;
+        glm::vec2 D = glm::vec2(0);
         glm::vec2 delta = glm::vec2(0);
         for (Particle* n : _p_neighbours[p]) {
-            float q = 1.f - std::max(glm::length(p->pos - n->pos), 0.001f) / RADIUS;
+            float q = 1.f - std::max(glm::length(p->pos - n->pos), 1e-10f) / RADIUS;
             glm::vec2 v = (p->pos - n->pos) / std::max(glm::length(p->pos - n->pos), 0.001f);
             D = (float)(.5f * dt * dt * (P * q + P_near * q * q)) * v;
-            n->pos = n->pos + D;
-            delta = delta - D;
-            if(std::isnan(delta.x))
+
+            if(std::isnan(D.x) || !std::isfinite(D.x))
                 std::cout << "A" << std::endl;
+
+            D.x = std::min(D.x, 100.f);
+            D.x = std::max(D.x, -100.f);
+            D.y = std::min(D.y, 100.f);
+            D.y = std::max(D.y, -100.f);
+
+            n->pos = n->pos + D;
+
+            delta = delta - D;
         }
         p->pos = p->pos + D;
     }

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.23)
 project(FluidSim)
 
+set(CMAKE_CXX_FLAGS_RELEASE  "-O3")
+
 if(UNIX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 ")
 endif(UNIX)

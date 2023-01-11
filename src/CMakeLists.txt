@@ -27,7 +27,7 @@ add_dependencies(FluidSim copy_shaders)
 #link Kikan
 find_library(LIB_Kikan
         NAMES libKikan
-        PATHS ${PROJECT_SOURCE_DIR}/lib)
+        PATHS ${PROJECT_SOURCE_DIR}/../lib)
 target_link_libraries(FluidSim ${LIB_Kikan})
 
 #define GLEW_STATIC (necessary for glew)
@@ -36,7 +36,7 @@ add_compile_definitions(GLEW_STATIC)
 #link GLFW
 find_library(LIB_GLFW
         NAMES libglfw3
-        PATHS ${PROJECT_SOURCE_DIR}/lib)
+        PATHS ${PROJECT_SOURCE_DIR}/../lib)
 target_link_libraries(FluidSim ${LIB_GLFW})
 
 #link all necessary libraries for opengl
