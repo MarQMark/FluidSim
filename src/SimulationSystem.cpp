@@ -8,13 +8,15 @@
 #define SIGMA 0.00000005f
 #define BETA 0.000000005f
 
-SimulationSystem::SimulationSystem() {
+SimulationSystem::SimulationSystem(DistanceField* distanceField) {
     singleInclude(Particle);
 
+    _distanceField = distanceField;
     _grid = new Grid(glm::vec2(0,0), 20, 20, 10);
 }
 
 SimulationSystem::~SimulationSystem() {
+    delete _distanceField;
     delete _grid;
 }
 
@@ -95,8 +97,6 @@ void SimulationSystem::apply_viscosity(double dt) {
                 float q = length / RADIUS;
                 float k = .5f * (float)dt * (1.f - q);
                 glm::vec2 I = k * (SIGMA * vel_i + BETA * vel_i * vel_i) * v_pn;
-                if(std::isnan(I.x) || !std::isfinite(I.x))
-                    std::cout << "B" << std::endl;
                 p->vel -= I;
             }
         }
@@ -158,9 +158,6 @@ void SimulationSystem::double_density_relaxation(double dt) {
             glm::vec2 v = (p->pos - n->pos) / std::max(glm::length(p->pos - n->pos), 0.001f);
             D = (float)(.5f * dt * dt * (P * q + P_near * q * q)) * v;
 
-            if(std::isnan(D.x) || !std::isfinite(D.x))
-                std::cout << "A" << std::endl;
-
             D.x = std::min(D.x, 100.f);
             D.x = std::max(D.x, -100.f);
             D.y = std::min(D.y, 100.f);
@@ -178,10 +175,10 @@ void SimulationSystem::resolve_collisions() {
     for (auto* entity : _entities) {
         auto *p = entity->getComponent<Particle>();
 
-        p->pos.x = std::max(p->pos.x, 1.f);
-        p->pos.y = std::max(p->pos.y, 1.f);
-        p->pos.x = std::min(p->pos.x, 199.f);
-        p->pos.y = std::min(p->pos.y, 199.f);
+        p->pos.x = std::max(p->pos.x, 0.f);
+        p->pos.y = std::max(p->pos.y, 0.f);
+        p->pos.x = std::min(p->pos.x, 200.f);
+        p->pos.y = std::min(p->pos.y, 200.f);
     }
 }
 
@@ -197,7 +194,7 @@ void SimulationSystem::update_sprite() {
         auto *p = entity->getComponent<Particle>();
 
         auto* sprite = entity->getComponent<Kikan::Texture2DSprite>();
-        glm::vec2 delta = p->pos - sprite->points[0] + glm::vec2(5, 5);
+        glm::vec2 delta = p->pos - sprite->points[0] + glm::vec2(-5, 5);
         sprite->points[0] += delta;
         sprite->points[1] += delta;
         sprite->points[2] += delta;

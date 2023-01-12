@@ -3,17 +3,19 @@
 
 #include "Kikan/ecs/systems/ISystem.h"
 #include "FluidSim/Grid.h"
+#include "FluidSim/DistanceField.h"
 #include <map>
 
 class SimulationSystem : public Kikan::ISystem{
 public:
-    SimulationSystem();
-    ~SimulationSystem();
+    explicit SimulationSystem(DistanceField* distanceField);
+    ~SimulationSystem() override;
 
     void update(double dt) override;
 
 private:
     Grid* _grid;
+    DistanceField* _distanceField;
     std::map<Particle*, std::vector<Particle*>> _p_neighbours;
 
     void apply_external_forces(double dt);

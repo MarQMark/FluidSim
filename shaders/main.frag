@@ -12,5 +12,10 @@ void main() {
     if(v_textureSlot != -1 && texture(u_texture[int(v_textureSlot)], v_texCoords).a < 0.4)
         discard;
 
-    fragColor = v_color;
+    if(v_textureSlot == 1){
+        fragColor = v_color;
+    }
+    else{
+        fragColor = texture(u_texture[int(v_textureSlot)], v_texCoords);
+    }
 }

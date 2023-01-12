@@ -1,7 +1,7 @@
 project(FluidSim)
 
 set(SOURCE_FILES
-        main.cpp SimulationSystem.cpp Grid.cpp ../include/FluidSim/Grid.h)
+        main.cpp SimulationSystem.cpp Grid.cpp ../include/FluidSim/Grid.h DistanceField.cpp ../include/FluidSim/DistanceField.h)
 add_executable(FluidSim ${SOURCE_FILES})
 
 target_include_directories(FluidSim
@@ -23,6 +23,14 @@ add_custom_target(copy_shaders ALL
         ${PROJECT_BINARY_DIR}/shaders
         COMMENT "Copying shaders into binary directory")
 add_dependencies(FluidSim copy_shaders)
+
+#copy shaders to target folder
+add_custom_target(copy_assets ALL
+        COMMAND  ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/../assets
+        ${PROJECT_BINARY_DIR}/assets
+        COMMENT "Copying assets into binary directory")
+add_dependencies(FluidSim copy_assets)
 
 #link Kikan
 find_library(LIB_Kikan

@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Kikan/Engine.h"
 #include "Kikan/ecs/components/Texture2DSprite.h"
 #include "Kikan/ecs/components/QuadSprite.h"
@@ -5,17 +6,19 @@
 #include "Kikan/opengl/buffers/Texture2D.h"
 #include "FluidSim/Particle.h"
 #include "FluidSim/SimulationSystem.h"
+#include "stb_image/stb_image.h"
 
 Kikan::Entity* createParticle(glm::vec2 pos, float w, float h, GLuint txtID){
     auto* entity = new Kikan::Entity();
 
     auto* sprite = new Kikan::Texture2DSprite();
-    sprite->points[0] = pos;
-    sprite->points[1] = pos + glm::vec2(w, 0);
-    sprite->points[2] = pos + glm::vec2(w, -h);
-    sprite->points[3] = pos + glm::vec2(0, -h);
+    sprite->points[0] = pos + glm::vec2(-w / 2.f, h / 2.f);
+    sprite->points[1] = pos + glm::vec2(w / 2.f, h / 2.f);
+    sprite->points[2] = pos + glm::vec2(w / 2.f, -h / 2.f);
+    sprite->points[3] = pos + glm::vec2(-w / 2.f, -h / 2.f);
     sprite->color = glm::vec4(0, 0, .8, 1.);
     sprite->textureID = txtID;
+    sprite->layer = -1;
     entity->addComponent(sprite);
 
     auto* particle = new Particle();
@@ -40,15 +43,56 @@ Kikan::Entity* createLine(glm::vec2 pos, float w, float h){
     return entity;
 }
 
+Kikan::Entity* createBox(glm::vec2 pos, float w, float h, GLuint txtID){
+    auto* box = new Kikan::Entity();
+    auto* sprite = new Kikan::Texture2DSprite();
+    sprite->points[0] = pos;
+    sprite->points[1] = pos + glm::vec2(w, 0);
+    sprite->points[2] = pos + glm::vec2(w, -h);
+    sprite->points[3] = pos + glm::vec2(0, -h);
+    sprite->textureID = txtID;
+    sprite->layer = -.5;
+    box->addComponent(sprite);
+    return box;
+}
+
 #define TEXTURE_SIZE 500
 #define TEXTURE_SIZE_HALF (TEXTURE_SIZE / 2.f)
 int WinMain() {
     Kikan::Engine engine;
+
+#pragma region Shader
     engine.getRenderer()->shader()->changeFs(Kikan::Shader::loadShaderSource("shaders/main.frag"));
 
-    engine.getScene()->addSystem(new Kikan::SpriteRenderSystem());
-    engine.getScene()->addSystem(new SimulationSystem());
+    glClearColor(0.2, 0.3, 0.7, 1.);
 
+    //load max texture units in sampler in default frag shader
+    GLint maxTextureUnits;
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
+    GLint textures[maxTextureUnits];
+    for(int i = 0; i < maxTextureUnits; i++) textures[i] = i;
+        engine.getRenderer()->shader()->uniform1iv("u_texture", 8, textures);
+
+#pragma endregion
+
+#pragma region background
+    //create Box background
+    int mapWidth;
+    int mapHeight;
+    int mapBPP;
+    stbi_set_flip_vertically_on_load(1);
+    unsigned char* buff = stbi_load("assets/box.png", &mapWidth, &mapHeight, &mapBPP, 4);
+    Kikan::Texture2D boxTxt(mapWidth, mapHeight, buff);
+#pragma endregion
+
+    auto* df = new DistanceField(glm::vec2(-50, -50), mapWidth, mapHeight, buff);
+
+    engine.getScene()->addSystem(new Kikan::SpriteRenderSystem());
+    engine.getScene()->addSystem(new SimulationSystem(df));
+
+    engine.getScene()->addEntity(createBox(glm::vec2(-50, 250), 300, 300, boxTxt.get()));
+
+#pragma region particles
     //create Texture
     std::vector<float> data(TEXTURE_SIZE * TEXTURE_SIZE * 4);
     for (int x = 0; x < TEXTURE_SIZE; ++x) {
@@ -62,21 +106,13 @@ int WinMain() {
     Kikan::Texture2D texture2D(TEXTURE_SIZE, TEXTURE_SIZE, data.data());
 
     //create Fluid
-    //engine.getScene()->addEntity(createParticle(glm::vec2(25, 150), 10, 10, texture2D.get()));
-    //for(int n = 0; n < 5; n++)
-    //    for(int i = 0; i < 100; i++)
-    //        engine.getScene()->addEntity(createParticle(glm::vec2(i * 10, 50 + n), 10, 10, texture2D.get()));
     for (int i = 0; i < 1000; ++i) {
         engine.getScene()->addEntity(createParticle(glm::vec2(rand() % 200, rand() % 200), 10, 10, texture2D.get()));
     }
+#pragma endregion
 
-
-    //draw grid
-    engine.getScene()->addEntity(createLine(glm::vec2(-400, -1), 800, 2));
-    engine.getScene()->addEntity(createLine(glm::vec2(-1, 400), 2, 800));
-
-
-    engine.getScene()->camera()->scale(1 / 400.0f, 1 / 400.0f * (1280. /720. ));
+    engine.getScene()->camera()->translate(-.5, -.5);
+    engine.getScene()->camera()->scale(1 / 400.f, 1 / 400.0f * (1280. /720. ));
 
     glfwSwapInterval(1);
 
