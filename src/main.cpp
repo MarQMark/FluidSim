@@ -71,7 +71,7 @@ int WinMain() {
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
     GLint textures[maxTextureUnits];
     for(int i = 0; i < maxTextureUnits; i++) textures[i] = i;
-        engine.getRenderer()->shader()->uniform1iv("u_texture", 8, textures);
+        engine.getRenderer()->shader()->uniform1iv("u_texture", maxTextureUnits, textures);
 
 #pragma endregion
 
@@ -88,7 +88,7 @@ int WinMain() {
     auto* df = new DistanceField(glm::vec2(-50, -50), mapWidth, mapHeight, buff);
 
     engine.getScene()->addSystem(new Kikan::SpriteRenderSystem());
-    engine.getScene()->addSystem(new SimulationSystem(df));
+    //engine.getScene()->addSystem(new SimulationSystem(df));
 
     engine.getScene()->addEntity(createBox(glm::vec2(-50, 250), 300, 300, boxTxt.get()));
 
@@ -111,8 +111,8 @@ int WinMain() {
     }
 #pragma endregion
 
-    engine.getScene()->camera()->translate(-.5, -.5);
-    engine.getScene()->camera()->scale(1 / 400.f, 1 / 400.0f * (1280. /720. ));
+    engine.getScene()->camera()->scale(1 / 150.f, 1 / 150.0f);
+    engine.getScene()->camera()->translate(-100, -100);
 
     glfwSwapInterval(1);
 
@@ -122,3 +122,9 @@ int WinMain() {
 
     return 0;
 }
+
+#ifdef __linux__
+int main(){
+    WinMain();
+}
+#endif

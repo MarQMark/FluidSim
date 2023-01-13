@@ -49,6 +49,7 @@ class Renderer {
         std::map<unsigned int, std::vector<AutoBatch*>> _auto_batches;
 
         void setup_openGl();
+        static void query_errors(const std::string& tag);
     };
 }
 

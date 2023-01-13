@@ -34,7 +34,7 @@ add_dependencies(FluidSim copy_assets)
 
 #link Kikan
 find_library(LIB_Kikan
-        NAMES libKikan
+        NAMES libKikan.a
         PATHS ${PROJECT_SOURCE_DIR}/../lib)
 target_link_libraries(FluidSim ${LIB_Kikan})
 
@@ -43,7 +43,7 @@ add_compile_definitions(GLEW_STATIC)
 
 #link GLFW
 find_library(LIB_GLFW
-        NAMES libglfw3
+        NAMES libglfw3.a
         PATHS ${PROJECT_SOURCE_DIR}/../lib)
 target_link_libraries(FluidSim ${LIB_GLFW})
 
