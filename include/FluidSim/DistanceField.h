@@ -7,15 +7,19 @@
 class DistanceField {
 private:
     struct Field{
+        explicit Field(int dist) : distance(dist) {};
+
         int distance;
-        glm::vec2 normal;
+        glm::vec2 normal{};
     };
 
 public:
-    DistanceField(glm::vec2 pos, int width, int height, unsigned char* data);
+    DistanceField(glm::vec2 pos, int width, int height, unsigned char* data, std::string& file);
     ~DistanceField();
 
-    float distance(glm::vec2 pos);
+    int distance(glm::vec2 pos);
+    void normal(glm::vec2 pos, glm::vec2& normal);
+
 private:
     glm::vec2 _pos;
 
@@ -24,6 +28,15 @@ private:
     int _height;
 
     std::vector<Field*> _grid;
+
+    void load_file(std::ifstream& f);
+    void generate_field(std::string& file);
+
+    void calc_dist(int x, int y, unsigned char target_col);
+    bool color_check(int x, int y, glm::vec2 pos, unsigned char col, int i);
+
+    unsigned char color(int x, int y);
+    unsigned char color(glm::vec2 pos);
 };
 
 

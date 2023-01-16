@@ -18,13 +18,13 @@ private:
     DistanceField* _distanceField;
     std::map<Particle*, std::vector<Particle*>> _p_neighbours;
 
-    void apply_external_forces(double dt);
-    void apply_viscosity(double dt);
-    void advance_particles(double dt);
+    void apply_external_forces(float dt);
+    void apply_viscosity(float dt);
+    void advance_particles(float dt);
     void update_neighbours();
-    void double_density_relaxation(double dt);
-    void resolve_collisions();
-    void update_velocity(double dt);
+    void double_density_relaxation(float dt);
+    void resolve_collisions(float dt);
+    void update_velocity(float dt);
     void update_sprite();
 };
 

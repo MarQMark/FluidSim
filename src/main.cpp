@@ -64,7 +64,8 @@ int WinMain() {
 #pragma region Shader
     engine.getRenderer()->shader()->changeFs(Kikan::Shader::loadShaderSource("shaders/main.frag"));
 
-    glClearColor(0.2, 0.3, 0.7, 1.);
+    //glClearColor(0.2, 0.3, 0.7, 1.);
+    glClearColor(0., 0., 0., 0.);
 
     //load max texture units in sampler in default frag shader
     GLint maxTextureUnits;
@@ -73,7 +74,11 @@ int WinMain() {
     for(int i = 0; i < maxTextureUnits; i++) textures[i] = i;
         engine.getRenderer()->shader()->uniform1iv("u_texture", maxTextureUnits, textures);
 
+    glBlendEquation( GL_FUNC_ADD);
+
 #pragma endregion
+
+    std::string fileName("assets/tube");
 
 #pragma region background
     //create Box background
@@ -81,14 +86,15 @@ int WinMain() {
     int mapHeight;
     int mapBPP;
     stbi_set_flip_vertically_on_load(1);
-    unsigned char* buff = stbi_load("assets/box.png", &mapWidth, &mapHeight, &mapBPP, 4);
+    unsigned char* buff = stbi_load((fileName + ".png").c_str(), &mapWidth, &mapHeight, &mapBPP, 4);
     Kikan::Texture2D boxTxt(mapWidth, mapHeight, buff);
 #pragma endregion
 
-    auto* df = new DistanceField(glm::vec2(-50, -50), mapWidth, mapHeight, buff);
+    std::string datafile(fileName + ".dat");
+    auto* df = new DistanceField(glm::vec2(-50, -50), mapWidth, mapHeight, buff, datafile);
 
     engine.getScene()->addSystem(new Kikan::SpriteRenderSystem());
-    //engine.getScene()->addSystem(new SimulationSystem(df));
+    engine.getScene()->addSystem(new SimulationSystem(df));
 
     engine.getScene()->addEntity(createBox(glm::vec2(-50, 250), 300, 300, boxTxt.get()));
 
@@ -107,14 +113,14 @@ int WinMain() {
 
     //create Fluid
     for (int i = 0; i < 1000; ++i) {
-        engine.getScene()->addEntity(createParticle(glm::vec2(rand() % 200, rand() % 200), 10, 10, texture2D.get()));
+        engine.getScene()->addEntity(createParticle(glm::vec2(rand() % 50, rand() % 50 + 150), 10, 10, texture2D.get()));
     }
 #pragma endregion
 
-    engine.getScene()->camera()->scale(1 / 150.f, 1 / 150.0f);
+    engine.getScene()->camera()->scale(1 / 150.f * (720. / 1280.), 1 / 150.0f);
     engine.getScene()->camera()->translate(-100, -100);
 
-    glfwSwapInterval(1);
+    //glfwSwapInterval(1);
 
     while (engine.shouldRun()){
         engine.update();
