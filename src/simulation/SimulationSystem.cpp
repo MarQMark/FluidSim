@@ -4,15 +4,11 @@
 #include "FluidSim/Particle.h"
 #include "Kikan/ecs/components/Texture2DSprite.h"
 
-#define RADIUS 5.0f
-#define SIGMA 0.02f
-#define BETA 0.05f
-
-SimulationSystem::SimulationSystem(DistanceField* distanceField) {
+SimulationSystem::SimulationSystem(DistanceField* distanceField, Constants* constants)
+    : _distanceField(distanceField), _constants(constants){
     singleInclude(Particle);
 
-    _distanceField = distanceField;
-    _grid = new Grid(glm::vec2(0,0), 200 / RADIUS, 200 / RADIUS, RADIUS);
+    _grid = new Grid(glm::vec2(0,0), 200 / _constants->RADIUS, 200 / _constants->RADIUS, _constants->RADIUS);
 }
 
 SimulationSystem::~SimulationSystem() {
@@ -94,9 +90,9 @@ void SimulationSystem::apply_viscosity(float dt) {
                 float length = std::max(glm::length(v_pn), 0.001f);
                 vel_i /= length;
                 v_pn /= length;
-                float q = length / RADIUS;
+                float q = length / _constants->RADIUS;
                 float k = .5f * dt * (1.f - q);
-                glm::vec2 I = k * (SIGMA * vel_i + BETA * vel_i * vel_i) * v_pn;
+                glm::vec2 I = k * (_constants->SIGMA * vel_i + _constants->BETA * vel_i * vel_i) * v_pn;
                 p->vel -= I;
             }
         }
@@ -122,18 +118,12 @@ void SimulationSystem::update_neighbours() {
         std::vector<Particle*> possibleN;
         _grid->possibleNeighbours(possibleN, p);
         for (Particle* possibleP : possibleN) {
-            if(glm::length(p->pos - possibleP->pos) < RADIUS && p != possibleP)
+            if(glm::length(p->pos - possibleP->pos) < _constants->RADIUS && p != possibleP)
                 _p_neighbours[p].push_back(possibleP);
         }
     }
 }
 
-#define P0 1000.f
-#define STIFFNESS 0.00000005f
-#define STIFFNESS_NEAR 0.00000003f
-
-#define MAX_PRESS 1e5
-#define MAX_D 10.f
 void SimulationSystem::double_density_relaxation(float dt) {
     for (auto* entity : _entities) {
         auto *p = entity->getComponent<Particle>();
@@ -142,30 +132,30 @@ void SimulationSystem::double_density_relaxation(float dt) {
         double press_near = 0;
 
         for (Particle* n : _p_neighbours[p]) {
-            float q = 1.f - std::max(glm::length(p->pos - n->pos), 1e-10f) / RADIUS;
+            float q = 1.f - std::max(glm::length(p->pos - n->pos), 1e-10f) / _constants->RADIUS;
             press += q * q;
             press_near += q * q * q;
         }
 
-        press = std::max(press, -MAX_PRESS);
-        press = std::min(press, MAX_PRESS);
-        press_near = std::max(press_near, -MAX_PRESS);
-        press_near = std::min(press_near, MAX_PRESS);
+        press = std::max(press, -_constants->MAX_PRESS);
+        press = std::min(press, _constants->MAX_PRESS);
+        press_near = std::max(press_near, -_constants->MAX_PRESS);
+        press_near = std::min(press_near, _constants->MAX_PRESS);
 
-        float P = STIFFNESS * (press - P0);
-        float P_near = STIFFNESS_NEAR * press_near;
+        float P = (float)(_constants->STIFFNESS * (press - _constants->P0));
+        float P_near = (float)(_constants->STIFFNESS_NEAR * press_near);
 
         glm::vec2 D = glm::vec2(0);
         glm::vec2 delta = glm::vec2(0);
         for (Particle* n : _p_neighbours[p]) {
-            float q = 1.f - std::max(glm::length(p->pos - n->pos), 1e-10f) / RADIUS;
+            float q = 1.f - std::max(glm::length(p->pos - n->pos), 1e-10f) / _constants->RADIUS;
             glm::vec2 v = (p->pos - n->pos) / std::max(glm::length(p->pos - n->pos), 0.001f);
             D = .5f * dt * dt * (P * q + P_near * q * q) * v;
 
-            D.x = std::min(D.x, MAX_D);
-            D.x = std::max(D.x, -MAX_D);
-            D.y = std::min(D.y, MAX_D);
-            D.y = std::max(D.y, -MAX_D);
+            D.x = std::min(D.x, _constants->MAX_D);
+            D.x = std::max(D.x, -_constants->MAX_D);
+            D.y = std::min(D.y, _constants->MAX_D);
+            D.y = std::max(D.y, -_constants->MAX_D);
 
             n->pos = n->pos + D;
 
@@ -175,8 +165,6 @@ void SimulationSystem::double_density_relaxation(float dt) {
     }
 }
 
-#define FRICTION .008f
-#define COLLISION_RADIUS 2//(int)RADIUS
 void SimulationSystem::resolve_collisions(float dt) {
     for (auto* entity : _entities) {
         auto *p = entity->getComponent<Particle>();
@@ -187,13 +175,13 @@ void SimulationSystem::resolve_collisions(float dt) {
         //p->pos.y = std::min(p->pos.y, 200.f);
 
         int dist = _distanceField->distance(p->pos);
-        if(dist > -COLLISION_RADIUS){
+        if(dist > -_constants->COLLISION_RADIUS){
             glm::vec2 normal(0);
             _distanceField->normal(p->pos, normal);
             glm::vec2 tangent(-normal.y, normal.x);
-            tangent *= dt * FRICTION * glm::dot(glm::normalize(p->pos - p->ppos), tangent);
+            tangent *= dt * _constants->FRICTION * glm::dot(glm::normalize(p->pos - p->ppos), tangent);
             p->pos -= tangent;
-            p->pos -= .8f * (float)(dist + COLLISION_RADIUS) * normal;
+            p->pos -= .8f * (float)(dist + _constants->COLLISION_RADIUS) * normal;
         }
     }
 }

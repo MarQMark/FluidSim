@@ -13,6 +13,12 @@
 namespace Kikan {
 class Renderer {
     public:
+        class Override{
+        public:
+            virtual void preRender() = 0;
+            virtual void postRender() = 0;
+        };
+
         Renderer(){
             setup_openGl();
         }
@@ -36,8 +42,9 @@ class Renderer {
         void autoBatch(std::vector<IVertex*> vertices, std::vector<GLuint>& indices);
 
         void render(double dt);
-        void (*preRender)(Renderer* renderer, double dt) = nullptr;
-        void (*postRender)(Renderer* renderer, double dt) = nullptr;
+        void addPreRender(void (*func)(void* o, Renderer* renderer, double dt), void* o);
+        void addPostRender(void (*func)(void* o, Renderer* renderer, double dt), void* o);
+        void overrideRender(Override* ovr);
 
         Shader* shader(const std::string& name = "default");
     private:
@@ -48,7 +55,13 @@ class Renderer {
 
         std::map<unsigned int, std::vector<AutoBatch*>> _auto_batches;
 
-        void setup_openGl();
+        void (*preRender)(void* o, Renderer* renderer, double dt) = nullptr;
+        void (*postRender)(void* o, Renderer* renderer, double dt) = nullptr;
+        void* _o_pre_render = nullptr;
+        void* _o_post_render = nullptr;
+        Override* _override_render = nullptr;
+
+    void setup_openGl();
         static void query_errors(const std::string& tag);
     };
 }
