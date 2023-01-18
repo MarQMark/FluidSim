@@ -73,11 +73,7 @@ FluidSimulation::FluidSimulation(std::string& map) {
 
     _engine->getRenderer()->shader()->changeFs(Kikan::Shader::loadShaderSource("shaders/main.frag"));
     _engine->getRenderer()->overrideRender(this);
-    GLint maxTextureUnits;
-    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
-    GLint textures[maxTextureUnits];
-    for(int i = 0; i < maxTextureUnits; i++) textures[i] = i;
-    _engine->getRenderer()->shader()->uniform1iv("u_texture", maxTextureUnits, textures);
+    _engine->getRenderer()->shader()->uniform1li("u_sampler", 0);
 
 
     // Setup ImGUI
@@ -124,7 +120,7 @@ FluidSimulation::FluidSimulation(std::string& map) {
         for (int y = 0; y < TEXTURE_SIZE; ++y) {
             data[(x + TEXTURE_SIZE * y) * 4] = 0.;
             data[(x + TEXTURE_SIZE * y) * 4 + 1] = 0.;
-            data[(x + TEXTURE_SIZE * y) * 4 + 2] = 0.;
+            data[(x + TEXTURE_SIZE * y) * 4 + 2] = 1.;
             data[(x + TEXTURE_SIZE * y) * 4 + 3] = (float)(1.f - std::sqrt((x - TEXTURE_SIZE_HALF) * (x - TEXTURE_SIZE_HALF) + (y - TEXTURE_SIZE_HALF) * (y - TEXTURE_SIZE_HALF)) / TEXTURE_SIZE_HALF);
         }
     }
@@ -134,6 +130,9 @@ FluidSimulation::FluidSimulation(std::string& map) {
     for (int i = 0; i < 1000; ++i) {
         _engine->getScene()->addEntity(createParticle(glm::vec2(rand() % 50, rand() % 50 + 150), 10, 10, _particle2D->get()));
     }
+
+    _engine->getScene()->camera()->scale(1 / 150.f, 1 / 150.0f);
+    _engine->getScene()->camera()->translate(-100, -100);
 }
 
 FluidSimulation::~FluidSimulation() {
@@ -154,7 +153,7 @@ bool FluidSimulation::shouldRun() const {
     return _engine->shouldRun();
 }
 
-void FluidSimulation::preRender() {
+void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
     _engine->getScene()->camera()->reset();
     _engine->getScene()->camera()->scale(1 / 150.f, 1 / 150.0f);
     _engine->getScene()->camera()->translate(-100, -100);
@@ -169,7 +168,7 @@ void FluidSimulation::preRender() {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _view_space_2D->get(), 0);
 }
 
-void FluidSimulation::postRender() {
+void FluidSimulation::postRender(Kikan::Renderer* renderer, double dt) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     render_dockspace();

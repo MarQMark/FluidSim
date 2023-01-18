@@ -6,16 +6,16 @@
 namespace Kikan {
     class AutoBatch{
     public:
-         explicit AutoBatch(VertexBufferLayout* vbl, GLuint vertexSize);
+         explicit AutoBatch(VertexBufferLayout* vbl, GLuint vertexSize, float textureID);
         ~AutoBatch();
 
-        int addVertices(std::vector<IVertex*>& vertices);
-        int addVertices(std::vector<IVertex*>& vertices, std::vector<GLuint>& indices);
+        int addVertices(std::vector<IVertex*>& vertices, int start, int stop);
+        int addVertices(std::vector<IVertex*>& vertices, std::vector<GLuint>& indices, int start, int stop);
 
         void render();
 
     private:
-        int add_vertices(std::vector<IVertex*>& vertices);
+        int add_vertices(std::vector<IVertex*>& vertices, int start, int stop);
 
         struct VertexSpace {
             char* data = nullptr;
@@ -23,13 +23,10 @@ namespace Kikan {
             GLuint size = 0;
         };
 
-        int _max_texture_units = 4;
-        float* _texture_ids;
-        int _last_slot = 0;
-        int find_texture(float texture);
-
         VertexBufferLayout* _vbl;
         VertexSpace _vertex_space;
+
+        GLuint _textureID;
 
         GLuint _next_index = 0;
         std::vector<GLuint> _indices;

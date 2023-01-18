@@ -17,8 +17,8 @@ public:
     bool shouldRun() const;
 
 private:
-    void preRender() override;
-    void postRender() override;
+    void preRender(Kikan::Renderer* renderer, double dt) override;
+    void postRender(Kikan::Renderer* renderer, double dt) override;
 
     Kikan::Engine* _engine;
     Kikan::Texture2D* _particle2D;

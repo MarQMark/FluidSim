@@ -6,12 +6,12 @@ in float v_textureSlot;
 
 layout(location = 0) out vec4 fragColor;
 
-uniform sampler2D u_texture[gl_MaxTextureImageUnits];
+uniform sampler2D u_sampler;
 
 void main() {
     vec4 color = v_color;
 
-    color = mix(color, texture(u_texture[int(v_textureSlot)], v_texCoords), step(0., v_textureSlot));
+    color = mix(color, texture(u_sampler, v_texCoords), step(0., v_textureSlot));
 
     fragColor = color;
 }

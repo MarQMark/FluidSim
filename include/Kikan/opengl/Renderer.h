@@ -15,8 +15,8 @@ class Renderer {
     public:
         class Override{
         public:
-            virtual void preRender() = 0;
-            virtual void postRender() = 0;
+            virtual void preRender(Renderer* renderer, double dt) = 0;
+            virtual void postRender(Renderer* renderer, double dt) = 0;
         };
 
         Renderer(){
@@ -37,9 +37,7 @@ class Renderer {
         void renderTexture2D(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, GLuint textureId, glm::vec4 color = glm::vec4(0), float layer = 0);
 
         template <class T>
-        void autoBatch(std::vector<IVertex*> vertices);
-        template <class T>
-        void autoBatch(std::vector<IVertex*> vertices, std::vector<GLuint>& indices);
+        void autoBatch(std::vector<IVertex*> vertices, std::vector<GLuint>* indices = nullptr);
 
         void render(double dt);
         void addPreRender(void (*func)(void* o, Renderer* renderer, double dt), void* o);
@@ -53,7 +51,7 @@ class Renderer {
         std::map<std::string, Shader*> _shaders;
         std::map<unsigned int, Batch*> _batches;
 
-        std::map<unsigned int, std::vector<AutoBatch*>> _auto_batches;
+        std::map<uint64_t, AutoBatch*> _auto_batches;
 
         void (*preRender)(void* o, Renderer* renderer, double dt) = nullptr;
         void (*postRender)(void* o, Renderer* renderer, double dt) = nullptr;
@@ -61,8 +59,9 @@ class Renderer {
         void* _o_post_render = nullptr;
         Override* _override_render = nullptr;
 
-    void setup_openGl();
+        void setup_openGl();
         static void query_errors(const std::string& tag);
+        static uint64_t auto_batch_id(uint32_t signature, float textureID);
     };
 }
 
