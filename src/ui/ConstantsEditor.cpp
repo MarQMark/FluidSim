@@ -43,6 +43,9 @@ void ConstantsEditor::render() {
     ss << _constants->COLLISION_RADIUS;
     std::string buf10(ss.str());
     ss.str(std::string());
+    ss << _constants->MAX_VEL;
+    std::string buf11(ss.str());
+    ss.str(std::string());
 
     ImGui::Text("Radius");
     ImGui::InputText("##Radius", &buf1, ImGuiInputTextFlags_CharsDecimal);
@@ -64,17 +67,28 @@ void ConstantsEditor::render() {
     ImGui::InputText("##Friction", &buf9, ImGuiInputTextFlags_CharsDecimal);
     ImGui::Text("Collision Radius");
     ImGui::InputText("##Collision Radius", &buf10, ImGuiInputTextFlags_CharsDecimal);
+    ImGui::Text("Max Velocity");
+    ImGui::InputText("##Max Velocity", &buf11, ImGuiInputTextFlags_CharsDecimal);
 
-    _constants->RADIUS = std::stof(buf1);
-    _constants->SIGMA = std::stof(buf2);
-    _constants->BETA = std::stof(buf3);
-    _constants->P0 = std::stof(buf4);
-    _constants->STIFFNESS = std::stof(buf5);
-    _constants->STIFFNESS_NEAR = std::stof(buf6);
-    _constants->MAX_PRESS = std::stod(buf7);
-    _constants->MAX_D = std::stof(buf8);
-    _constants->FRICTION = std::stof(buf9);
-    _constants->COLLISION_RADIUS = std::stoi(buf10);
+    ImGui::Text("\n");
+    _constants->RESET = ImGui::Button("RESET", ImVec2(100, 20));
+    ImGui::Text("\n");
+    _constants->PAUSE = _constants->PAUSE != ImGui::Button(_constants->PAUSE ? "RESUME" : "PAUSE", ImVec2(100, 20));
+
+    if(!_constants->PAUSE)
+    {
+        _constants->RADIUS = std::stof(buf1);
+        _constants->SIGMA = std::stof(buf2);
+        _constants->BETA = std::stof(buf3);
+        _constants->P0 = std::stof(buf4);
+        _constants->STIFFNESS = std::stof(buf5);
+        _constants->STIFFNESS_NEAR = std::stof(buf6);
+        _constants->MAX_PRESS = std::stod(buf7);
+        _constants->MAX_D = std::stof(buf8);
+        _constants->FRICTION = std::stof(buf9);
+        _constants->COLLISION_RADIUS = std::stoi(buf10);
+        _constants->MAX_VEL = std::stof(buf11);
+    }
 
     ImGui::End();
 }

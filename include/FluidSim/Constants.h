@@ -2,7 +2,7 @@
 #define FLUIDSIM_CONSTANTS_H
 
 struct Constants{
-    float RADIUS = 5;
+    float RADIUS = 10;
     float SIGMA = .02f;
     float BETA = .05f;
     float P0 = 1000;
@@ -12,6 +12,10 @@ struct Constants{
     float MAX_D = 10;
     float FRICTION = .008f;
     int COLLISION_RADIUS = 2;
+    float MAX_VEL = 10.f;
+
+    bool RESET = false;
+    bool PAUSE = false;
 };
 
 #endif //FLUIDSIM_CONSTANTS_H

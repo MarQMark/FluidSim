@@ -2,7 +2,7 @@
 #include "FluidSim/FluidSimulation.h"
 
 int WinMain() {
-    std::string fileName("assets/box");
+    std::string fileName("assets/tube");
 
     FluidSimulation fluidSimulation(fileName);
 

@@ -26,6 +26,27 @@ void SimulationSystem::update(double dt) {
     //    return;
     //i++;
 
+    if(_constants->RESET){
+        _constants->RESET = false;
+
+        for (auto* entity : _entities) {
+            auto* p = entity->getComponent<Particle>();
+            p->vel = glm::vec2(0);
+            p->pos = glm::vec2(rand() % 50, rand() % 50 + 150);
+            p->ppos = p->pos;
+
+            auto* s = entity->getComponent<Kikan::Texture2DSprite>();
+            int w = 10, h = 10;
+            s->points[0] = p->pos;
+            s->points[1] = p->pos + glm::vec2(w, 0);
+            s->points[2] = p->pos + glm::vec2(w, -h);
+            s->points[3] = p->pos + glm::vec2(0, -h);
+        }
+    }
+
+    if(_constants->PAUSE)
+        return;
+
     dt = 33.3333;
 
     auto time = std::chrono::high_resolution_clock::now();
@@ -87,7 +108,10 @@ void SimulationSystem::apply_viscosity(float dt) {
             glm::vec2 vel_i = (p->vel - n->vel) * v_pn;
 
             if(vel_i.x > 0 && vel_i.y > 0){
-                float length = std::max(glm::length(v_pn), 0.001f);
+                if(p->pos == n->pos)
+                    n->pos += glm::vec2 (0.01);
+
+                float length = glm::length(v_pn);
                 vel_i /= length;
                 v_pn /= length;
                 float q = length / _constants->RADIUS;
@@ -118,7 +142,7 @@ void SimulationSystem::update_neighbours() {
         std::vector<Particle*> possibleN;
         _grid->possibleNeighbours(possibleN, p);
         for (Particle* possibleP : possibleN) {
-            if(glm::length(p->pos - possibleP->pos) < _constants->RADIUS && p != possibleP)
+            if(p->pos != possibleP->pos && glm::length(p->pos - possibleP->pos) < _constants->RADIUS)
                 _p_neighbours[p].push_back(possibleP);
         }
     }
@@ -132,7 +156,10 @@ void SimulationSystem::double_density_relaxation(float dt) {
         double press_near = 0;
 
         for (Particle* n : _p_neighbours[p]) {
-            float q = 1.f - std::max(glm::length(p->pos - n->pos), 1e-10f) / _constants->RADIUS;
+            if(p->pos == n->pos)
+                n->pos += glm::vec2 (0.01);
+
+            float q = 1.f - glm::length(p->pos - n->pos) / _constants->RADIUS;
             press += q * q;
             press_near += q * q * q;
         }
@@ -148,8 +175,11 @@ void SimulationSystem::double_density_relaxation(float dt) {
         glm::vec2 D = glm::vec2(0);
         glm::vec2 delta = glm::vec2(0);
         for (Particle* n : _p_neighbours[p]) {
-            float q = 1.f - std::max(glm::length(p->pos - n->pos), 1e-10f) / _constants->RADIUS;
-            glm::vec2 v = (p->pos - n->pos) / std::max(glm::length(p->pos - n->pos), 0.001f);
+            if(p->pos == n->pos)
+                n->pos += glm::vec2 (0.01);
+
+            float q = 1.f - glm::length(p->pos - n->pos) / _constants->RADIUS;
+            glm::vec2 v = (p->pos - n->pos) / glm::length(p->pos - n->pos);
             D = .5f * dt * dt * (P * q + P_near * q * q) * v;
 
             D.x = std::min(D.x, _constants->MAX_D);
@@ -190,6 +220,11 @@ void SimulationSystem::update_velocity(float dt) {
     for (auto* entity : _entities) {
         auto *p = entity->getComponent<Particle>();
         p->vel = (p->pos - p->ppos) / dt;
+
+        p->vel.x = std::max(p->vel.x, -_constants->MAX_VEL);
+        p->vel.y = std::max(p->vel.y, -_constants->MAX_VEL);
+        p->vel.x = std::min(p->vel.x, _constants->MAX_VEL);
+        p->vel.y = std::min(p->vel.y, _constants->MAX_VEL);
     }
 }
 
