@@ -6,11 +6,14 @@
 #include "DistanceField.h"
 #include "ViewSpace.h"
 #include "ConstantsEditor.h"
+#include "FluidSim/MapFile.h"
+#include "MapTree.h"
+#include "SimulationSystem.h"
 
 
 class FluidSimulation : Kikan::Renderer::Override {
 public:
-    explicit FluidSimulation(std::string& map);
+    explicit FluidSimulation();
     ~FluidSimulation();
 
     void update() const;
@@ -22,15 +25,19 @@ private:
 
     Kikan::Engine* _engine;
     Kikan::Texture2D* _particle2D;
-    Kikan::Texture2D* _map2D;
+    SimulationSystem* _sim_system;
+    Kikan::Entity* _background;
 
     ConstantsEditor* _ce;
 
-    DistanceField* _df;
-
     Kikan::Texture2D* _view_space_2D;
+    float _view_space_ratio = 1;
     GLuint _fbo{};
     ViewSpace* _vs;
+
+    MapTree* _mt;
+    std::vector<MapFile*> _maps;
+    MapFile* _curr_map;
 
     void render_dockspace();
     void render_ui();

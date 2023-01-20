@@ -178,4 +178,12 @@ unsigned char DistanceField::color(glm::vec2 pos) {
     return color((int)pos.x , (int)pos.y);
 }
 
+int DistanceField::getWidth() {
+    return _width;
+}
+
+int DistanceField::getHeight() {
+    return _height;
+}
+
 

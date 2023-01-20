@@ -16,8 +16,8 @@ void ViewSpace::render() {
 
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     drawList->AddImage(reinterpret_cast<ImTextureID>(_txt->get()),
-                       ImVec2(middleX - (_height / 2.f) + padding, ImGui::GetWindowPos().y + padding + 20),
-                       ImVec2(middleX + (_height / 2.f) - padding, ImGui::GetWindowPos().y + ImGui::GetWindowHeight() - padding),
+                       ImVec2(middleX - (_width / 2.f) + padding, ImGui::GetWindowPos().y + padding + 20),
+                       ImVec2(middleX + (_width / 2.f) - padding, ImGui::GetWindowPos().y + ImGui::GetWindowHeight() - padding),
                        ImVec2(0, 1),
                        ImVec2(1, 0));
 
@@ -38,4 +38,3 @@ float ViewSpace::getHeight() const {
 float ViewSpace::getZoom() const {
     return _zoom;
 }
-

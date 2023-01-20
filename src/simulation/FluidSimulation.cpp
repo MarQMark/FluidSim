@@ -1,14 +1,9 @@
 #include "FluidSim/FluidSimulation.h"
 #include <iostream>
 
-#include "Kikan/ecs/components/Texture2DSprite.h"
 #include "Kikan/ecs/components/QuadSprite.h"
 #include "Kikan/ecs/systems/SpriteRenderSystem.h"
-
-#include "FluidSim/Particle.h"
-#include "FluidSim/SimulationSystem.h"
-
-#include "stb_image/stb_image.h"
+#include "Kikan/ecs/components/Texture2DSprite.h"
 
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_impl_glfw.h"
@@ -67,10 +62,10 @@ Kikan::Entity* createBox(glm::vec2 pos, float w, float h, GLuint txtID){
     return box;
 }
 
-FluidSimulation::FluidSimulation(std::string& map) {
+FluidSimulation::FluidSimulation() {
+
+    //Setup Engine
     _engine = new Kikan::Engine();
-
-
     _engine->getRenderer()->shader()->changeFs(Kikan::Shader::loadShaderSource("shaders/main.frag"));
     _engine->getRenderer()->overrideRender(this);
     _engine->getRenderer()->shader()->uniform1li("u_sampler", 0);
@@ -85,33 +80,29 @@ FluidSimulation::FluidSimulation(std::string& map) {
     ImGui_ImplOpenGL3_Init("#version 430");
 
 
-    // Setup ViewSpace
+    // Setup Widgets
     glGenFramebuffers(1, &_fbo);
     _view_space_2D = new Kikan::Texture2D(RESOLUTION, RESOLUTION, (float*)nullptr);
     _vs = new ViewSpace(_view_space_2D);
-
-
-    // Setup Constants
     _ce = new ConstantsEditor();
+    _mt = new MapTree(&_maps);
 
 
-    //create Box background
-    int mapWidth;
-    int mapHeight;
-    int mapBPP;
-    stbi_set_flip_vertically_on_load(1);
-    unsigned char* buff = stbi_load((map + ".png").c_str(), &mapWidth, &mapHeight, &mapBPP, 4);
-    _map2D = new Kikan::Texture2D(mapWidth, mapHeight, buff);
-
-    std::string datafile(map + ".dat");
-    _df = new DistanceField(glm::vec2(-50, -50), mapWidth, mapHeight, buff, datafile);
+    // Load maps
+    _maps.push_back(new MapFile("assets/box"));
+    _maps.push_back(new MapFile("assets/tube"));
+    _maps.push_back(new MapFile("assets/slope"));
+    _curr_map = _maps[0];
+    _engine->getRenderer()->shader()->uniform1lf("u_pTexture", (float)_maps.size() + 2);
 
 
     // Engine Stuff
     _engine->getScene()->addSystem(new Kikan::SpriteRenderSystem());
-    _engine->getScene()->addSystem(new SimulationSystem(_df, _ce->getConstants()));
+    _sim_system = new SimulationSystem(_curr_map->getDistanceField(), _ce->getConstants());
+    _engine->getScene()->addSystem(_sim_system);
 
-    _engine->getScene()->addEntity(createBox(glm::vec2(-50, 250), 300, 300, _map2D->get()));
+    _background = createBox(glm::vec2(0, (float)_curr_map->getHeight()), (float)_curr_map->getWidth(), (float)_curr_map->getHeight(), _curr_map->getTexture()->get());
+    _engine->getScene()->addEntity(_background);
 
 
     //create Texture
@@ -128,20 +119,19 @@ FluidSimulation::FluidSimulation(std::string& map) {
 
     //spawn Particles
     for (int i = 0; i < 1000; ++i) {
-        _engine->getScene()->addEntity(createParticle(glm::vec2(rand() % 50, rand() % 50 + 150), 10, 10, _particle2D->get()));
+        _engine->getScene()->addEntity(createParticle(glm::vec2(rand() % 50 + 50, rand() % 50 + _curr_map->getHeight() - 100), 10, 10, _particle2D->get()));
     }
-
-    _engine->getScene()->camera()->scale(1 / 150.f, 1 / 150.0f);
-    _engine->getScene()->camera()->translate(-100, -100);
 }
 
 FluidSimulation::~FluidSimulation() {
     delete _engine;
     delete _particle2D;
-    delete _map2D;
-    delete _df;
     delete _view_space_2D;
     delete _ce;
+    delete _mt;
+    for (auto* map : _maps) {
+        delete map;
+    }
     glDeleteFramebuffers(1, &_fbo);
 }
 
@@ -154,9 +144,28 @@ bool FluidSimulation::shouldRun() const {
 }
 
 void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
+    float ratio = ((float)_vs->getWidth() / (float)_vs->getHeight());
     _engine->getScene()->camera()->reset();
-    _engine->getScene()->camera()->scale(1 / _vs->getZoom(), 1 / _vs->getZoom());
-    _engine->getScene()->camera()->translate(-100, -100);
+    if(_curr_map->getHeight() > _curr_map->getWidth())
+        _engine->getScene()->camera()->scale(1 / ((float)_curr_map->getHeight() * _vs->getZoom() / 2.f * ratio), 1 / ((float)_curr_map->getHeight() * _vs->getZoom() / 2.f ));
+    else
+        _engine->getScene()->camera()->scale(1 / ((float)_curr_map->getWidth() * _vs->getZoom() / 2.f * ratio), 1 / ((float)_curr_map->getWidth() * _vs->getZoom() / 2.f ));
+    _engine->getScene()->camera()->translate(-(float)_curr_map->getWidth() / 2, -(float)_curr_map->getHeight() / 2);
+
+    if(_mt->getLoaded() != nullptr && _curr_map != _mt->getLoaded()){
+        //TODO: DELETE OLD PARTICLES
+
+        _curr_map = _mt->getLoaded();
+        _ce->getConstants()->REBUILD = true;
+        _sim_system->setDistanceField(_curr_map->getDistanceField());
+
+        auto* sprite = _background->getComponent<Kikan::Texture2DSprite>();
+        sprite->points[0] = glm::vec2(0, _curr_map->getHeight());
+        sprite->points[1] = sprite->points[0] + glm::vec2(_curr_map->getWidth(), 0);
+        sprite->points[2] = sprite->points[0] + glm::vec2(_curr_map->getWidth(), -_curr_map->getHeight());
+        sprite->points[3] = sprite->points[0] + glm::vec2(0, -_curr_map->getHeight());
+        sprite->textureID = _curr_map->getTexture()->get();
+    }
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -240,4 +249,5 @@ void FluidSimulation::render_dockspace() {
 void FluidSimulation::render_ui() {
     _vs->render();
     _ce->render();
+    _mt->render();
 }

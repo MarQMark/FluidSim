@@ -2,9 +2,7 @@
 #include "FluidSim/FluidSimulation.h"
 
 int WinMain() {
-    std::string fileName("assets/tube");
-
-    FluidSimulation fluidSimulation(fileName);
+    FluidSimulation fluidSimulation;
 
     while (fluidSimulation.shouldRun()){
         fluidSimulation.update();

@@ -20,6 +20,9 @@ public:
     int distance(glm::vec2 pos);
     void normal(glm::vec2 pos, glm::vec2& normal);
 
+    int getWidth();
+    int getHeight();
+
 private:
     glm::vec2 _pos;
 

@@ -14,6 +14,7 @@ public:
 
     void update(double dt) override;
 
+    void setDistanceField(DistanceField* distanceField);
 private:
     Constants* _constants;
     Grid* _grid;

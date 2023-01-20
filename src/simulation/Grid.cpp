@@ -21,6 +21,7 @@ Grid::~Grid() {
 }
 
 void Grid::moveParticle(Particle* p) {
+    //TODO: Find out faster way
     //std::vector<Particle*>* old_pos = _grid[grid_pos1D(p->ppos)];
 
     //if(!old_pos->empty()){

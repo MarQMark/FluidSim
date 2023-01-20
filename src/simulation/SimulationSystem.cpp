@@ -8,23 +8,21 @@ SimulationSystem::SimulationSystem(DistanceField* distanceField, Constants* cons
     : _distanceField(distanceField), _constants(constants){
     singleInclude(Particle);
 
-    _grid = new Grid(glm::vec2(0,0), 200 / _constants->RADIUS, 200 / _constants->RADIUS, _constants->RADIUS);
+    _grid = new Grid(glm::vec2(0,0), _distanceField->getWidth() / _constants->RADIUS, _distanceField->getHeight() / _constants->RADIUS, _constants->RADIUS);
 }
 
 SimulationSystem::~SimulationSystem() {
-    delete _distanceField;
     delete _grid;
 }
 
-int i = 0;
 void SimulationSystem::update(double dt) {
-    //if(!_input->keyPressed(Kikan::Key::R)){
-    //    i = 0;
-    //    return;
-    //}
-    //if(i != 0)
-    //    return;
-    //i++;
+    if(_constants->REBUILD){
+        delete _grid;
+        _grid = new Grid(glm::vec2(0, 0), _distanceField->getWidth() / _constants->RADIUS, _distanceField->getHeight() / _constants->RADIUS, _constants->RADIUS);
+
+        _constants->REBUILD = false;
+        _constants->RESET = true;
+    }
 
     if(_constants->RESET){
         _constants->RESET = false;
@@ -32,7 +30,7 @@ void SimulationSystem::update(double dt) {
         for (auto* entity : _entities) {
             auto* p = entity->getComponent<Particle>();
             p->vel = glm::vec2(0);
-            p->pos = glm::vec2(rand() % 50, rand() % 50 + 150);
+            p->pos = glm::vec2(rand() % 50 + 50, rand() % 50 + _distanceField->getHeight() - 100);
             p->ppos = p->pos;
 
             auto* s = entity->getComponent<Kikan::Texture2DSprite>();
@@ -320,5 +318,9 @@ void SimulationSystem::update_sprite() {
             nanCounter++;
     }
     std::cout << nanCounter << std::endl;
+}
+
+void SimulationSystem::setDistanceField(DistanceField* distanceField) {
+    _distanceField = distanceField;
 }
 
