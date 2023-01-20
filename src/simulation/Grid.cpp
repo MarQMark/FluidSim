@@ -21,13 +21,13 @@ Grid::~Grid() {
 }
 
 void Grid::moveParticle(Particle* p) {
-    std::vector<Particle*>* old_pos = _grid[grid_pos1D(p->ppos)];
+    //std::vector<Particle*>* old_pos = _grid[grid_pos1D(p->ppos)];
 
-    if(!old_pos->empty()){
-        auto it = std::find(old_pos->begin(), old_pos->end(), p);
-        if(it != old_pos->end())
-            old_pos->erase(it);
-    }
+    //if(!old_pos->empty()){
+    //    auto it = std::find(old_pos->begin(), old_pos->end(), p);
+    //    if(it != old_pos->end())
+    //        old_pos->erase(it);
+    //}
 
     unsigned int index = grid_pos1D(p->pos);
     p->index = index;
@@ -76,5 +76,20 @@ void Grid::grid_pos2D(glm::vec2 pos, glm::vec2& gpos) {
 
     gpos.x = (float)x;
     gpos.y = (float)y;
+}
+
+int Grid::count() {
+    int count = 0;
+    for (auto* cell : _grid) {
+        count += cell->size();
+    }
+
+    return count;
+}
+
+void Grid::clear() {
+    for (auto* cell : _grid) {
+        cell->clear();
+    }
 }
 

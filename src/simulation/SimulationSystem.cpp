@@ -99,7 +99,7 @@ void SimulationSystem::apply_external_forces(float dt) {
     }
 }
 
-void SimulationSystem::apply_viscosity(float dt) {
+/*void SimulationSystem::apply_viscosity(float dt) {
     for (auto* entity : _entities) {
         auto* p = entity->getComponent<Particle>();
         for (auto* n : _p_neighbours[p]) {
@@ -121,9 +121,30 @@ void SimulationSystem::apply_viscosity(float dt) {
             }
         }
     }
+}*/
+
+void SimulationSystem::apply_viscosity(float dt) {
+    for (auto* entity : _entities) {
+        auto* p = entity->getComponent<Particle>();
+        for (auto* n : _p_neighbours[p]) {
+            if(p->pos == n->pos)
+                n->pos += glm::vec2 (0.01);
+
+            glm::vec2 q = (p->pos - n->pos) / _constants->RADIUS;
+            if(glm::length(q) < 1.f){
+                glm::vec2 u = (p->vel - n->vel) * glm::normalize((p->pos - n->pos));
+                if(glm::length(u) > 0){
+                    glm::vec2 I = dt * (1.f - q) * (_constants->SIGMA * u + _constants->BETA * u * u) * glm::normalize((p->pos - n->pos));
+                    p->vel -= .5f * I;
+                    n->vel += .5f * I;
+                }
+            }
+        }
+    }
 }
 
 void SimulationSystem::advance_particles(float dt) {
+    _grid->clear();
     for (auto* entity : _entities) {
         auto* p = entity->getComponent<Particle>();
         p->ppos = p->pos;
@@ -148,7 +169,7 @@ void SimulationSystem::update_neighbours() {
     }
 }
 
-void SimulationSystem::double_density_relaxation(float dt) {
+/*void SimulationSystem::double_density_relaxation(float dt) {
     for (auto* entity : _entities) {
         auto *p = entity->getComponent<Particle>();
 
@@ -193,6 +214,45 @@ void SimulationSystem::double_density_relaxation(float dt) {
         }
         p->pos = p->pos + delta;
     }
+}*/
+
+void SimulationSystem::double_density_relaxation(float dt) {
+    for (auto* entity : _entities) {
+        auto *i = entity->getComponent<Particle>();
+
+        glm::vec2 p = glm::vec2(0);
+        glm::vec2 p_near = glm::vec2(0);
+
+        for (Particle* j : _p_neighbours[i]) {
+            if(i->pos == j->pos)
+                j->pos += glm::vec2 (0.01);
+
+            glm::vec2 q = (i->pos - j->pos) / _constants->RADIUS;
+            if(glm::length(q) < 1.f){
+                p += (1.f - q) * (1.f - q);
+                p_near += (1.f - q) * (1.f - q) * (1.f - q);
+            }
+        }
+
+        glm::vec2 P = _constants->STIFFNESS * (p - _constants->P0);
+        glm::vec2 P_near = _constants->STIFFNESS_NEAR * p_near;
+
+        i->index = P.y;
+
+        glm::vec2 dx = glm::vec2(0);
+        for (Particle* j : _p_neighbours[i]) {
+            if(i->pos == j->pos)
+                j->pos += glm::vec2 (0.01);
+
+            glm::vec2 q = (i->pos - j->pos) / _constants->RADIUS;
+            if(glm::length(q) < 1.f){
+                glm::vec2 D = dt * dt * (P * (1.f - q) + P_near * (1.f - q) * (1.f - q)) * glm::normalize(i->pos - j->pos);
+                j->pos += 0.5f * D;
+                dx -= 0.5f * D;
+            }
+        }
+        i->pos += dx;
+    }
 }
 
 void SimulationSystem::resolve_collisions(float dt) {
@@ -228,8 +288,22 @@ void SimulationSystem::update_velocity(float dt) {
     }
 }
 
+float map(float x, float in_min, float in_max, float out_min, float out_max)
+{
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 void SimulationSystem::update_sprite() {
     int nanCounter = 0;
+
+    float max = -10000;
+    float min = 10000;
+    for (auto* entity : _entities) {
+        auto *p = entity->getComponent<Particle>();
+
+        max = std::max(max, p->index);
+        min = std::min(min, p->index);
+    }
 
     for (auto* entity : _entities) {
         auto *p = entity->getComponent<Particle>();
@@ -240,9 +314,11 @@ void SimulationSystem::update_sprite() {
         sprite->points[1] += delta;
         sprite->points[2] += delta;
         sprite->points[3] += delta;
+        sprite->color = glm::vec4(.0f , .0f, map(p->index, min, max, 1, 0), 1.f);
 
         if(std::isnan(p->pos.x) || std::isnan(p->pos.y))
             nanCounter++;
     }
     std::cout << nanCounter << std::endl;
 }
+

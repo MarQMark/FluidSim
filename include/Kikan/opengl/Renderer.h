@@ -19,7 +19,7 @@ class Renderer {
             virtual void postRender(Renderer* renderer, double dt) = 0;
         };
 
-        Renderer(){
+        Renderer(int width, int height) : _width(width), _height(height){
             setup_openGl();
         }
 
@@ -28,6 +28,10 @@ class Renderer {
         }
 
         GLFWwindow* getWindow();
+        void setWidth(int width);
+        int getWidth();
+        void setHeight(int height);
+        int getHeight();
 
         glm::mat4x4 mvp;
 
@@ -47,6 +51,9 @@ class Renderer {
         Shader* shader(const std::string& name = "default");
     private:
         GLFWwindow *_window = nullptr;
+
+        int _width;
+        int _height;
 
         std::map<std::string, Shader*> _shaders;
         std::map<unsigned int, Batch*> _batches;

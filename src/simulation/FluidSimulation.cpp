@@ -155,7 +155,7 @@ bool FluidSimulation::shouldRun() const {
 
 void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
     _engine->getScene()->camera()->reset();
-    _engine->getScene()->camera()->scale(1 / 150.f, 1 / 150.0f);
+    _engine->getScene()->camera()->scale(1 / _vs->getZoom(), 1 / _vs->getZoom());
     _engine->getScene()->camera()->translate(-100, -100);
 
     ImGui_ImplOpenGL3_NewFrame();

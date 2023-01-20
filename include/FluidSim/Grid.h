@@ -10,8 +10,10 @@ public:
     Grid(glm::vec2 pos, unsigned int w, unsigned int h, float size);
     ~Grid();
 
+    void clear();
     void moveParticle(Particle* p);
     void possibleNeighbours(std::vector<Particle*>& posNeigh, Particle* p);
+    int count();
 private:
     glm::vec2 _pos;
     unsigned int _w;

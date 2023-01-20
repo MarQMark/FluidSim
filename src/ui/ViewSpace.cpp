@@ -20,6 +20,10 @@ void ViewSpace::render() {
                        ImVec2(middleX + (_height / 2.f) - padding, ImGui::GetWindowPos().y + ImGui::GetWindowHeight() - padding),
                        ImVec2(0, 1),
                        ImVec2(1, 0));
+
+    if(ImGui::IsWindowFocused())
+        _zoom *= 1.f - 0.2f * ImGui::GetIO().MouseWheel;
+
     ImGui::End();
 }
 
@@ -29,5 +33,9 @@ float ViewSpace::getWidth() const {
 
 float ViewSpace::getHeight() const {
     return _height;
+}
+
+float ViewSpace::getZoom() const {
+    return _zoom;
 }
 
