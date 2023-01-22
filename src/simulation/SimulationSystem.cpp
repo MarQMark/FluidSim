@@ -4,8 +4,8 @@
 #include "FluidSim/Particle.h"
 #include "Kikan/ecs/components/Texture2DSprite.h"
 
-SimulationSystem::SimulationSystem(DistanceField* distanceField, Constants* constants)
-    : _distanceField(distanceField), _constants(constants){
+SimulationSystem::SimulationSystem(DistanceField* distanceField, Constants* constants, Kikan::Scene* scene)
+    : _distanceField(distanceField), _constants(constants), _scene(scene){
     singleInclude(Particle);
 
     _grid = new Grid(glm::vec2(0,0), _distanceField->getWidth() / _constants->RADIUS, _distanceField->getHeight() / _constants->RADIUS, _constants->RADIUS);
@@ -42,7 +42,7 @@ void SimulationSystem::update(double dt) {
         }
     }
 
-    if(_constants->PAUSE)
+    if(_constants->PAUSE || _constants->LOADING)
         return;
 
     dt = 33.3333;

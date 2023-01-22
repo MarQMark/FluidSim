@@ -13,7 +13,7 @@ DistanceField::DistanceField(glm::vec2 pos, int width, int height, unsigned char
     init();
 }
 
-DistanceField::DistanceField(glm::vec2 pos, int width, int height, unsigned char *data, std::string &file, int *progress, std::string *progress_msg) :
+DistanceField::DistanceField(glm::vec2 pos, int width, int height, unsigned char *data, std::string &file, float *progress, std::string *progress_msg) :
         _pos(pos), _width(width), _height(height), _data(data) , _grid(std::vector<Field*>(width * height)) {
 
     // This is kinda dumb. Too bad!
@@ -37,7 +37,7 @@ void DistanceField::init(){
     f.close();
 
     if(_progress != nullptr)
-        *_progress = 100;
+        *_progress = 1;
 }
 
 void DistanceField::load_file(std::ifstream& f) {
@@ -49,7 +49,7 @@ void DistanceField::load_file(std::ifstream& f) {
         f.read((char*) _grid[i], sizeof(Field));
 
         if(_progress != nullptr)
-            *_progress = (int)((float)i / (float)(_width * _height) * 100.f);
+            *_progress = (float)i / (float)(_width * _height);
     }
     if(!f.good())
         std::cout << "[ERROR] Failed to read distance field data from file" << std::endl;
@@ -73,7 +73,7 @@ void DistanceField::generate_field(std::string &file) {
         }
 
         if(_progress != nullptr)
-            *_progress = (int)((float)x / (float)_width * 100.f);
+            *_progress = (float)x / (float)_width;
     }
 
 
@@ -109,7 +109,7 @@ void DistanceField::generate_field(std::string &file) {
         }
 
         if(_progress != nullptr)
-            *_progress = (int)(x / _width);
+            *_progress =(float)x / (float)_width;
     }
 
     // Write to file

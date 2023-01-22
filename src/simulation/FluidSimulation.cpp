@@ -72,7 +72,8 @@ FluidSimulation::FluidSimulation() {
     _engine->getRenderer()->shader()->changeFs(Kikan::Shader::loadShaderSource("shaders/main.frag"));
     _engine->getRenderer()->overrideRender(this);
 
-    // This somehow throws OPENGL 0x502 (GL_INVALID_OPERATION)
+    // TODO: FIX: Linking program with change shader creates error
+    _engine->getRenderer()->shader()->bind();
     _engine->getRenderer()->shader()->uniform1li("u_sampler", 0);
 
 
@@ -103,7 +104,7 @@ FluidSimulation::FluidSimulation() {
 
     // Engine Stuff
     _engine->getScene()->addSystem(new Kikan::SpriteRenderSystem());
-    _sim_system = new SimulationSystem(_curr_map->getDistanceField(), _ce->getConstants());
+    _sim_system = new SimulationSystem(_curr_map->getDistanceField(), _ce->getConstants(), _engine->getScene());
     _engine->getScene()->addSystem(_sim_system);
 
     _background = createBox(glm::vec2(0, (float)_curr_map->getHeight()), (float)_curr_map->getWidth(), (float)_curr_map->getHeight(), _curr_map->getTexture()->get());
@@ -277,17 +278,23 @@ void FluidSimulation::render_ui() {
     _ce->render();
     _mt->render();
 
-    if(_loading != 100){
+    if(_loading < 1){
+        _ce->getConstants()->LOADING = true;
         ImGui::OpenPopup("Loading...");
         if (ImGui::BeginPopupModal("Loading...", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
             ImGui::Text(_loading_msg.c_str());
             ImGui::Separator();
 
-            std::stringstream ss;
-            ss << _loading << "/100 Percentage";
-            ImGui::Text(ss.str().c_str());
+            char buf[32];
+            sprintf(buf, "%.01f%%", _loading * 100 + 0.01f);
+            ImGui::ProgressBar(_loading, ImVec2(0.0f, 0.0f), buf);
+
             ImGui::EndPopup();
         }
+    }
+    else if(_loading == 1){
+        _ce->getConstants()->LOADING = false;
+        _loading = 2;
     }
 }

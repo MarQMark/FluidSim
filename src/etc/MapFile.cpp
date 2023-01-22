@@ -1,7 +1,7 @@
 #include "FluidSim/MapFile.h"
 #include "stb_image/stb_image.h"
 
-MapFile::MapFile(const std::string &path, int* progress, std::string* progress_msg) {
+MapFile::MapFile(const std::string &path, float* progress, std::string* progress_msg) {
     int mapBPP;
     stbi_set_flip_vertically_on_load(1);
     unsigned char* buff = stbi_load(path.c_str(), &_width, &_height, &mapBPP, 4);

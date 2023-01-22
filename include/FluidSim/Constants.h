@@ -17,6 +17,7 @@ struct Constants{
     bool RESET = false;
     bool PAUSE = false;
     bool REBUILD = false;
+    bool LOADING = false;
 };
 
 #endif //FLUIDSIM_CONSTANTS_H

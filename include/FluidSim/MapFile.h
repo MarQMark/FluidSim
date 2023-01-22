@@ -7,7 +7,7 @@
 
 class MapFile{
 public:
-    explicit MapFile(const std::string& path, int* progress = nullptr, std::string* progress_msg = nullptr);
+    explicit MapFile(const std::string& path, float* progress = nullptr, std::string* progress_msg = nullptr);
     ~MapFile();
 
     Kikan::Texture2D* getTexture();

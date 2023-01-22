@@ -40,7 +40,7 @@ private:
     std::vector<MapFile*> _maps;
     MapFile* _curr_map;
 
-    int _loading = 100;
+    float _loading = 1;
     std::string _loading_msg;
 
     void render_dockspace();
