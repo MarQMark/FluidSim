@@ -6,21 +6,27 @@
 #include "FluidSim/DistanceField.h"
 #include "FluidSim/Constants.h"
 #include "Kikan/ecs/Scene.h"
+#include "Stats.h"
+#include "Controls.h"
 #include <map>
 
 class SimulationSystem : public Kikan::ISystem{
 public:
-    explicit SimulationSystem(DistanceField* distanceField, Constants* constants, Kikan::Scene* scene);
+    explicit SimulationSystem(DistanceField* distanceField, Constants* constants, Controls* controls, Stats* stats, Kikan::Scene* scene);
     ~SimulationSystem() override;
 
     void update(double dt) override;
 
     void setDistanceField(DistanceField* distanceField);
 private:
-    Constants* _constants;
     Grid* _grid;
     DistanceField* _distanceField;
     std::map<Particle*, std::vector<Particle*>> _p_neighbours;
+
+    Constants* _constants;
+    Controls* _controls;
+    Stats* _stats;
+    unsigned int _lost_ps = 0;
 
     Kikan::Scene* _scene;
 
@@ -32,6 +38,7 @@ private:
     void resolve_collisions(float dt);
     void update_velocity(float dt);
     void update_sprite();
+    void update_stats();
 };
 
 #endif //FLUIDSIM_SIMULATION_SYSTEM_H

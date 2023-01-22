@@ -49,6 +49,7 @@ class Renderer {
         void overrideRender(Override* ovr);
 
         Shader* shader(const std::string& name = "default");
+        void shader(Shader* shader, const std::string& name = "default");
 
         static void queryErrors(const std::string& tag);
 private:

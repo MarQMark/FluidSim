@@ -18,7 +18,7 @@ set(SOURCE_FILES
         ui/ConstantsEditor.cpp
         ui/MapTree.cpp
         etc/MapFile.cpp
-        file_browser/ImGuiFileBrowser.cpp)
+        file_browser/ImGuiFileBrowser.cpp ui/StatsViewer.cpp)
 add_executable(FluidSim ${SOURCE_FILES})
 
 target_include_directories(FluidSim

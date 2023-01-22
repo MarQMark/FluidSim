@@ -12,6 +12,8 @@
 
 #include "../file_browser/ImGuiFileBrowser.h"
 
+#include "IconFontAwesome/IconsFontAwesome5.h"
+
 #define TEXTURE_SIZE 512
 #define TEXTURE_SIZE_HALF (TEXTURE_SIZE / 2.f)
 
@@ -69,10 +71,9 @@ FluidSimulation::FluidSimulation() {
 
     //Setup Engine
     _engine = new Kikan::Engine();
-    _engine->getRenderer()->shader()->changeFs(Kikan::Shader::loadShaderSource("shaders/main.frag"));
+    delete _engine->getRenderer()->shader();
+    _engine->getRenderer()->shader(new Kikan::Shader("shaders/default.vert", "shaders/main.frag"));
     _engine->getRenderer()->overrideRender(this);
-
-    // TODO: FIX: Linking program with change shader creates error
     _engine->getRenderer()->shader()->bind();
     _engine->getRenderer()->shader()->uniform1li("u_sampler", 0);
 
@@ -86,12 +87,15 @@ FluidSimulation::FluidSimulation() {
     ImGui_ImplOpenGL3_Init("#version 430");
 
 
-    // Setup Widgets
-    glGenFramebuffers(1, &_fbo);
-    _view_space_2D = new Kikan::Texture2D(RESOLUTION, RESOLUTION, (float*)nullptr);
-    _vs = new ViewSpace(_view_space_2D);
-    _ce = new ConstantsEditor();
-    _mt = new MapTree(&_maps);
+    // Setup Icon Font
+    io.Fonts->AddFontDefault();
+
+    // merge in icons from Font Awesome
+    static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
+    ImFontConfig icons_config; icons_config.MergeMode = true; icons_config.PixelSnapH = true;
+    std::string fontFile("assets/");
+    fontFile += FONT_ICON_FILE_NAME_FAS;
+    io.Fonts->AddFontFromFileTTF( fontFile.c_str(), 11.0f, &icons_config, icons_ranges );
 
 
     // Load maps
@@ -102,9 +106,18 @@ FluidSimulation::FluidSimulation() {
     _engine->getRenderer()->shader()->uniform1lf("u_pTexture", (float)_maps.size() + 2);
 
 
+    // Setup Widgets
+    glGenFramebuffers(1, &_fbo);
+    _view_space_2D = new Kikan::Texture2D(RESOLUTION, RESOLUTION, (float*)nullptr);
+    _vs = new ViewSpace(_view_space_2D, _curr_map);
+    _ce = new ConstantsEditor();
+    _mt = new MapTree(&_maps);
+    _sv = new StatsViewer();
+
+
     // Engine Stuff
     _engine->getScene()->addSystem(new Kikan::SpriteRenderSystem());
-    _sim_system = new SimulationSystem(_curr_map->getDistanceField(), _ce->getConstants(), _engine->getScene());
+    _sim_system = new SimulationSystem(_curr_map->getDistanceField(), _ce->getConstants(), _vs->getControls(), _sv->getStats(), _engine->getScene());
     _engine->getScene()->addSystem(_sim_system);
 
     _background = createBox(glm::vec2(0, (float)_curr_map->getHeight()), (float)_curr_map->getWidth(), (float)_curr_map->getHeight(), _curr_map->getTexture()->get());
@@ -136,6 +149,7 @@ FluidSimulation::~FluidSimulation() {
     delete _view_space_2D;
     delete _ce;
     delete _mt;
+    delete _sv;
     for (auto* map : _maps) {
         delete map;
     }
@@ -164,10 +178,9 @@ void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
 
     // Load different map
     if(_mt->getLoaded() != nullptr && _curr_map != _mt->getLoaded()){
-        //TODO: DELETE OLD PARTICLES
-
         _curr_map = _mt->getLoaded();
-        _ce->getConstants()->REBUILD = true;
+        _vs->getControls()->REBUILD = true;
+        _vs->setMapFile(_curr_map);
         _sim_system->setDistanceField(_curr_map->getDistanceField());
 
         auto* sprite = _background->getComponent<Kikan::Texture2DSprite>();
@@ -177,6 +190,9 @@ void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
         sprite->points[3] = sprite->points[0] + glm::vec2(0, -_curr_map->getHeight());
         sprite->textureID = _curr_map->getTexture()->get();
     }
+
+    //update FPS STAT
+    _sv->getStats()->FPS = _engine->time.fps;
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -277,9 +293,10 @@ void FluidSimulation::render_ui() {
     _vs->render();
     _ce->render();
     _mt->render();
+    _sv->render();
 
     if(_loading < 1){
-        _ce->getConstants()->LOADING = true;
+        _vs->getControls()->LOADING = true;
         ImGui::OpenPopup("Loading...");
         if (ImGui::BeginPopupModal("Loading...", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
@@ -294,7 +311,7 @@ void FluidSimulation::render_ui() {
         }
     }
     else if(_loading == 1){
-        _ce->getConstants()->LOADING = false;
+        _vs->getControls()->LOADING = false;
         _loading = 2;
     }
 }

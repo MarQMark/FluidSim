@@ -47,7 +47,7 @@ namespace Kikan {
         }
 
     protected:
-        Input* _input;
+        Input* _input{};
 
         template<class T>
         unsigned int signature(){

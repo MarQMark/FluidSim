@@ -10,6 +10,7 @@
 #include "MapTree.h"
 #include "SimulationSystem.h"
 #include "../../src/file_browser/ImGuiFileBrowser.h"
+#include "StatsViewer.h"
 
 class FluidSimulation : Kikan::Renderer::Override {
 public:
@@ -29,6 +30,7 @@ private:
     Kikan::Entity* _background;
 
     ConstantsEditor* _ce;
+    StatsViewer* _sv;
 
     Kikan::Texture2D* _view_space_2D;
     float _view_space_ratio = 1;

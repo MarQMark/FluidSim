@@ -4,8 +4,8 @@
 #include "FluidSim/Particle.h"
 #include "Kikan/ecs/components/Texture2DSprite.h"
 
-SimulationSystem::SimulationSystem(DistanceField* distanceField, Constants* constants, Kikan::Scene* scene)
-    : _distanceField(distanceField), _constants(constants), _scene(scene){
+SimulationSystem::SimulationSystem(DistanceField* distanceField, Constants* constants, Controls* controls, Stats* stats, Kikan::Scene* scene)
+    : _distanceField(distanceField), _constants(constants), _controls(controls), _stats(stats), _scene(scene){
     singleInclude(Particle);
 
     _grid = new Grid(glm::vec2(0,0), _distanceField->getWidth() / _constants->RADIUS, _distanceField->getHeight() / _constants->RADIUS, _constants->RADIUS);
@@ -16,16 +16,18 @@ SimulationSystem::~SimulationSystem() {
 }
 
 void SimulationSystem::update(double dt) {
-    if(_constants->REBUILD){
+    if(_controls->REBUILD){
         delete _grid;
         _grid = new Grid(glm::vec2(0, 0), _distanceField->getWidth() / _constants->RADIUS, _distanceField->getHeight() / _constants->RADIUS, _constants->RADIUS);
 
-        _constants->REBUILD = false;
-        _constants->RESET = true;
+        //TODO: DELETE OLD PARTICLES
+
+        _controls->REBUILD = false;
+        _controls->RESET = true;
     }
 
-    if(_constants->RESET){
-        _constants->RESET = false;
+    if(_controls->RESET){
+        _controls->RESET = false;
 
         for (auto* entity : _entities) {
             auto* p = entity->getComponent<Particle>();
@@ -42,7 +44,7 @@ void SimulationSystem::update(double dt) {
         }
     }
 
-    if(_constants->PAUSE || _constants->LOADING)
+    if(_controls->PAUSE || _controls->LOADING)
         return;
 
     dt = 33.3333;
@@ -87,6 +89,10 @@ void SimulationSystem::update(double dt) {
     update_sprite();
     if(_input->keyPressed(Kikan::Key::P))
         std::cout << ((std::chrono::duration<double, std::milli>)(std::chrono::high_resolution_clock::now() - time)).count() << "   update_sprite" << std::endl;
+
+    update_stats();
+    if(_input->keyPressed(Kikan::Key::P))
+        std::cout << ((std::chrono::duration<double, std::milli>)(std::chrono::high_resolution_clock::now() - time)).count() << "   update_stats" << std::endl;
 }
 
 void SimulationSystem::apply_external_forces(float dt) {
@@ -322,5 +328,19 @@ void SimulationSystem::update_sprite() {
 
 void SimulationSystem::setDistanceField(DistanceField* distanceField) {
     _distanceField = distanceField;
+}
+
+void SimulationSystem::update_stats() {
+    for (int i = 0; i < _entities.size(); ++i) {
+        auto* p = _entities[i]->getComponent<Particle>();
+        if(std::isnan(p->pos.x) || std::isnan(p->pos.y)){
+            _lost_ps++;
+            _scene->removeEntity(_entities[i]);
+            i--;
+        }
+    }
+
+    _stats->LOST_PARTICLES = _lost_ps;
+    _stats->PARTICLES = _entities.size();
 }
 
