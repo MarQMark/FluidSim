@@ -11,6 +11,7 @@ public:
 
     MapFile* getLoaded();
 private:
+
     std::vector<MapFile*>* _maps;
     MapFile* _loaded = nullptr;
 };

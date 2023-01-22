@@ -3,7 +3,7 @@
 
 #include "Constants.h"
 
-class ConstantsEditor{
+class ConstantsEditor {
 public:
     ConstantsEditor();
     ~ConstantsEditor();
@@ -13,7 +13,6 @@ public:
     Constants* getConstants();
 private:
     Constants* _constants;
-
 };
 
 #endif //FLUIDSIM_CONSTANTS_EDITOR_H

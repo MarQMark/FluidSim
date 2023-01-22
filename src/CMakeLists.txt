@@ -2,7 +2,8 @@ project(FluidSim)
 
 set(SOURCE_FILES
         main.cpp
-        simulation/SimulationSystem.cpp simulation/Grid.cpp
+        simulation/SimulationSystem.cpp
+        simulation/Grid.cpp
         simulation/DistanceField.cpp
         simulation/FluidSimulation.cpp
         imgui/imgui.cpp
@@ -12,7 +13,12 @@ set(SOURCE_FILES
         imgui/imgui_impl_opengl3.cpp
         imgui/imgui_stdlib.cpp
         imgui/imgui_tables.cpp
-        imgui/imgui_widgets.cpp ui/ViewSpace.cpp ui/ConstantsEditor.cpp ui/MapTree.cpp etc/MapFile.cpp)
+        imgui/imgui_widgets.cpp
+        ui/ViewSpace.cpp
+        ui/ConstantsEditor.cpp
+        ui/MapTree.cpp
+        etc/MapFile.cpp
+        file_browser/ImGuiFileBrowser.cpp)
 add_executable(FluidSim ${SOURCE_FILES})
 
 target_include_directories(FluidSim

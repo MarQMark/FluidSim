@@ -49,7 +49,9 @@ class Renderer {
         void overrideRender(Override* ovr);
 
         Shader* shader(const std::string& name = "default");
-    private:
+
+        static void queryErrors(const std::string& tag);
+private:
         GLFWwindow *_window = nullptr;
 
         int _width;
@@ -67,7 +69,6 @@ class Renderer {
         Override* _override_render = nullptr;
 
         void setup_openGl();
-        static void query_errors(const std::string& tag);
         static uint64_t auto_batch_id(uint32_t signature, float textureID);
     };
 }

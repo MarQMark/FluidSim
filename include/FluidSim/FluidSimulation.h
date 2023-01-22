@@ -9,7 +9,7 @@
 #include "FluidSim/MapFile.h"
 #include "MapTree.h"
 #include "SimulationSystem.h"
-
+#include "../../src/file_browser/ImGuiFileBrowser.h"
 
 class FluidSimulation : Kikan::Renderer::Override {
 public:
@@ -35,9 +35,13 @@ private:
     GLuint _fbo{};
     ViewSpace* _vs;
 
+    imgui_addons::ImGuiFileBrowser _fileBrowser;
     MapTree* _mt;
     std::vector<MapFile*> _maps;
     MapFile* _curr_map;
+
+    int _loading = 100;
+    std::string _loading_msg;
 
     void render_dockspace();
     void render_ui();

@@ -317,7 +317,7 @@ void SimulationSystem::update_sprite() {
         if(std::isnan(p->pos.x) || std::isnan(p->pos.y))
             nanCounter++;
     }
-    std::cout << nanCounter << std::endl;
+    //std::cout << nanCounter << std::endl;
 }
 
 void SimulationSystem::setDistanceField(DistanceField* distanceField) {

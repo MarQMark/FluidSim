@@ -1,5 +1,6 @@
 #include "FluidSim/FluidSimulation.h"
 #include <iostream>
+#include <sstream>
 
 #include "Kikan/ecs/components/QuadSprite.h"
 #include "Kikan/ecs/systems/SpriteRenderSystem.h"
@@ -9,7 +10,9 @@
 #include "../imgui/imgui_impl_glfw.h"
 #include "../imgui/imgui_impl_opengl3.h"
 
-#define TEXTURE_SIZE 500
+#include "../file_browser/ImGuiFileBrowser.h"
+
+#define TEXTURE_SIZE 512
 #define TEXTURE_SIZE_HALF (TEXTURE_SIZE / 2.f)
 
 #define RESOLUTION 2048
@@ -68,6 +71,8 @@ FluidSimulation::FluidSimulation() {
     _engine = new Kikan::Engine();
     _engine->getRenderer()->shader()->changeFs(Kikan::Shader::loadShaderSource("shaders/main.frag"));
     _engine->getRenderer()->overrideRender(this);
+
+    // This somehow throws OPENGL 0x502 (GL_INVALID_OPERATION)
     _engine->getRenderer()->shader()->uniform1li("u_sampler", 0);
 
 
@@ -89,9 +94,9 @@ FluidSimulation::FluidSimulation() {
 
 
     // Load maps
-    _maps.push_back(new MapFile("assets/box"));
-    _maps.push_back(new MapFile("assets/tube"));
-    _maps.push_back(new MapFile("assets/slope"));
+    _maps.push_back(new MapFile("assets/box.png"));
+    _maps.push_back(new MapFile("assets/tube.png"));
+    _maps.push_back(new MapFile("assets/slope.png"));
     _curr_map = _maps[0];
     _engine->getRenderer()->shader()->uniform1lf("u_pTexture", (float)_maps.size() + 2);
 
@@ -124,6 +129,7 @@ FluidSimulation::FluidSimulation() {
 }
 
 FluidSimulation::~FluidSimulation() {
+    _loading_msg = "KILL";
     delete _engine;
     delete _particle2D;
     delete _view_space_2D;
@@ -144,14 +150,18 @@ bool FluidSimulation::shouldRun() const {
 }
 
 void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
-    float ratio = ((float)_vs->getWidth() / (float)_vs->getHeight());
+    Kikan::Renderer::queryErrors("Begin");
+
+    // Set camera
     _engine->getScene()->camera()->reset();
+    float ratio = ((float)_vs->getWidth() / (float)_vs->getHeight());
     if(_curr_map->getHeight() > _curr_map->getWidth())
         _engine->getScene()->camera()->scale(1 / ((float)_curr_map->getHeight() * _vs->getZoom() / 2.f * ratio), 1 / ((float)_curr_map->getHeight() * _vs->getZoom() / 2.f ));
     else
         _engine->getScene()->camera()->scale(1 / ((float)_curr_map->getWidth() * _vs->getZoom() / 2.f * ratio), 1 / ((float)_curr_map->getWidth() * _vs->getZoom() / 2.f ));
     _engine->getScene()->camera()->translate(-(float)_curr_map->getWidth() / 2, -(float)_curr_map->getHeight() / 2);
 
+    // Load different map
     if(_mt->getLoaded() != nullptr && _curr_map != _mt->getLoaded()){
         //TODO: DELETE OLD PARTICLES
 
@@ -173,8 +183,8 @@ void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
 
     glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
     glViewport(0, 0, RESOLUTION, RESOLUTION);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _view_space_2D->get(), 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void FluidSimulation::postRender(Kikan::Renderer* renderer, double dt) {
@@ -196,7 +206,7 @@ void FluidSimulation::render_dockspace() {
 
     // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
     // because it would be confusing to have two docking targets within each others.
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking;
     if (opt_fullscreen)
     {
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -236,7 +246,7 @@ void FluidSimulation::render_dockspace() {
     ImGuiIO& io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
     {
-        ImGuiID dockspace_id = ImGui::GetID("MyBetterDockSpace");
+        ImGuiID dockspace_id = ImGui::GetID("DockSpace");
         ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
     }
 
@@ -247,7 +257,37 @@ void FluidSimulation::render_dockspace() {
 }
 
 void FluidSimulation::render_ui() {
+    bool open = false;
+    if(ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            if(ImGui::MenuItem("Load Map")) {
+                open = true;
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+
+    if(open)
+        ImGui::OpenPopup("Load Map");
+    if(_fileBrowser.showFileDialog("Load Map", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(ImGui::GetWindowWidth() * .75f, ImGui::GetWindowHeight() * .75f), ".png"))
+        _maps.push_back(new MapFile(_fileBrowser.selected_path, &_loading, &_loading_msg));
+
     _vs->render();
     _ce->render();
     _mt->render();
+
+    if(_loading != 100){
+        ImGui::OpenPopup("Loading...");
+        if (ImGui::BeginPopupModal("Loading...", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text(_loading_msg.c_str());
+            ImGui::Separator();
+
+            std::stringstream ss;
+            ss << _loading << "/100 Percentage";
+            ImGui::Text(ss.str().c_str());
+            ImGui::EndPopup();
+        }
+    }
 }

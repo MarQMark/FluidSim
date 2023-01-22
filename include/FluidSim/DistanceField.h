@@ -15,6 +15,7 @@ private:
 
 public:
     DistanceField(glm::vec2 pos, int width, int height, unsigned char* data, std::string& file);
+    DistanceField(glm::vec2 pos, int width, int height, unsigned char* data, std::string& file, int* progress, std::string* progress_msg);
     ~DistanceField();
 
     int distance(glm::vec2 pos);
@@ -32,6 +33,11 @@ private:
 
     std::vector<Field*> _grid;
 
+    int* _progress{};
+    std::string* _progress_msg{};
+    std::string _file_name;
+
+    void init();
     void load_file(std::ifstream& f);
     void generate_field(std::string& file);
 

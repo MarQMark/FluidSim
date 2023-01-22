@@ -1,26 +1,55 @@
 #include <iostream>
 #include <fstream>
 #include "FluidSim/DistanceField.h"
+#include <thread>
 
 #define KERNEL_RADIUS 4
 
 DistanceField::DistanceField(glm::vec2 pos, int width, int height, unsigned char* data, std::string& file) :
     _pos(pos), _width(width), _height(height), _data(data) , _grid(std::vector<Field*>(width * height)){
 
-    // Check for existence of file
-    std::ifstream f(file.c_str(), std::ios::out | std::ios::binary);
+    _file_name = file;
+
+    init();
+}
+
+DistanceField::DistanceField(glm::vec2 pos, int width, int height, unsigned char *data, std::string &file, int *progress, std::string *progress_msg) :
+        _pos(pos), _width(width), _height(height), _data(data) , _grid(std::vector<Field*>(width * height)) {
+
+    // This is kinda dumb. Too bad!
+    _file_name = file;
+    _progress = progress;
+    _progress_msg = progress_msg;
+
+    std::thread t(&DistanceField::init, this);
+    t.detach();
+}
+
+void DistanceField::init(){
+    if(_progress != nullptr)
+        *_progress = 0;
+
+    std::ifstream f(_file_name.c_str(), std::ios::out | std::ios::binary);
     if(f.good())
         load_file(f);
     else
-        generate_field(file);
+        generate_field(_file_name);
     f.close();
+
+    if(_progress != nullptr)
+        *_progress = 100;
 }
 
-
 void DistanceField::load_file(std::ifstream& f) {
+    if(_progress_msg != nullptr)
+        *_progress_msg = "Loading from file";
+
     for (int i = 0; i < _width * _height; ++i) {
         _grid[i] = new Field(0);
         f.read((char*) _grid[i], sizeof(Field));
+
+        if(_progress != nullptr)
+            *_progress = (int)((float)i / (float)(_width * _height) * 100.f);
     }
     if(!f.good())
         std::cout << "[ERROR] Failed to read distance field data from file" << std::endl;
@@ -28,20 +57,30 @@ void DistanceField::load_file(std::ifstream& f) {
 
 void DistanceField::generate_field(std::string &file) {
     // Calculate Distance
+    if(_progress_msg != nullptr)
+        *_progress_msg = "Generating distance Field";
+
     for (int x = 0; x < _width; ++x) {
         for (int y = 0; y < _height; ++y) {
             // Starting Pos is Black -> Border
             if(color(x, y) == 0){
                 calc_dist(x, y, 255);
             }
-                //Starting Pos is White -> Free Space
+            //Starting Pos is White -> Free Space
             else{
                 calc_dist(x, y, 0);
             }
         }
+
+        if(_progress != nullptr)
+            *_progress = (int)((float)x / (float)_width * 100.f);
     }
 
+
     // Calculate Normal
+    if(_progress_msg != nullptr)
+        *_progress_msg = "Generating Normals";
+
     for (int x = 0; x < _width; ++x) {
         for (int y = 0; y < _height; ++y) {
 
@@ -68,6 +107,9 @@ void DistanceField::generate_field(std::string &file) {
 
             _grid[x + _width * y]->normal = normal;
         }
+
+        if(_progress != nullptr)
+            *_progress = (int)(x / _width);
     }
 
     // Write to file
@@ -98,7 +140,10 @@ bool DistanceField::color_check(int x, int y, glm::vec2 pos, unsigned char col, 
 
 void DistanceField::calc_dist(int x, int y, unsigned char target_col) {
     glm::vec2 curr(x, y);
-    for (int i = 0; color(curr) != target_col; ++i) {
+    for (int i = 0; color(curr) != target_col && i < std::max(_width, _height); ++i) {
+        if(*_progress_msg == "KILL"){
+            exit(0);
+        }
 
         // Start
         curr += glm::vec2(0, 1);

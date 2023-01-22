@@ -4,7 +4,7 @@
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_stdlib.h"
 
-ConstantsEditor::ConstantsEditor(){
+ConstantsEditor::ConstantsEditor() {
     _constants = new Constants();
 }
 
@@ -12,6 +12,7 @@ void ConstantsEditor::render() {
 
     ImGui::Begin("Constants");
 
+    #pragma region float to string
     std::stringstream ss;
     ss << _constants->RADIUS;
     std::string buf1(ss.str());
@@ -46,7 +47,9 @@ void ConstantsEditor::render() {
     ss << _constants->MAX_VEL;
     std::string buf11(ss.str());
     ss.str(std::string());
+    #pragma endregion
 
+    #pragma region UI Elements
     ImGui::Text("Radius");
     ImGui::InputText("##Radius", &buf1, ImGuiInputTextFlags_CharsDecimal);
     ImGui::Text("Sigma");
@@ -69,6 +72,7 @@ void ConstantsEditor::render() {
     ImGui::InputText("##Collision Radius", &buf10, ImGuiInputTextFlags_CharsDecimal);
     ImGui::Text("Max Velocity");
     ImGui::InputText("##Max Velocity", &buf11, ImGuiInputTextFlags_CharsDecimal);
+    #pragma endregion
 
     ImGui::Text("\n");
     _constants->RESET = ImGui::Button("RESET", ImVec2(100, 20));
