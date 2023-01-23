@@ -135,11 +135,7 @@ FluidSimulation::FluidSimulation() {
         }
     }
     _particle2D = new Kikan::Texture2D(TEXTURE_SIZE, TEXTURE_SIZE, data.data());
-
-    //spawn Particles
-    for (int i = 0; i < 1000; ++i) {
-        _engine->getScene()->addEntity(createParticle(glm::vec2(rand() % 50 + 50, rand() % 50 + _curr_map->getHeight() - 100), 10, 10, _particle2D->get()));
-    }
+    _ce->getConstants()->TEXTURE_ID = _particle2D->get();
 }
 
 FluidSimulation::~FluidSimulation() {
@@ -170,6 +166,7 @@ void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
     // Set camera
     _engine->getScene()->camera()->reset();
     float ratio = ((float)_vs->getWidth() / (float)_vs->getHeight());
+    ratio = 1;
     if(_curr_map->getHeight() > _curr_map->getWidth())
         _engine->getScene()->camera()->scale(1 / ((float)_curr_map->getHeight() * _vs->getZoom() / 2.f * ratio), 1 / ((float)_curr_map->getHeight() * _vs->getZoom() / 2.f ));
     else

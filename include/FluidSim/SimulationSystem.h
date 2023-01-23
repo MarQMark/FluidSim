@@ -28,6 +28,8 @@ private:
     Stats* _stats;
     unsigned int _lost_ps = 0;
 
+    bool _extern_force = false;
+
     Kikan::Scene* _scene;
 
     void apply_external_forces(float dt);

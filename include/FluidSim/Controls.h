@@ -19,11 +19,16 @@ struct Controls{
     bool LOADING = false;
 
     int BRUSH_MODE = BMT::M_SPAWN;
-    float PEN_SIZE = 10;
-    int PARTICLE_COUNT = 100;
-    float ERASER_SIZE = 10;
+    float PEN_SIZE = 20;
+    bool SINGLE_SPAWN = true;
+    bool SINGLE_SPAWN_SPAWNED = false;
+    float ERASER_SIZE = 30;
     int FORCE_MODE = FMT::M_PUSH;
-    float FORCE = 0.001;
+    float FORCE = 0.003;
+
+    bool MOUSE_IN_SPACE = false;
+    float MOUSE_X = 0;
+    float MOUSE_Y = 0;
 };
 
 #endif //FLUIDSIM_CONTROLS_H

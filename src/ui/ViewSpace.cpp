@@ -40,20 +40,15 @@ void ViewSpace::render() {
                 std::stringstream ss;
                 ss << _controls->PEN_SIZE;
                 std::string buf1(ss.str());
-                ss.str(std::string());
-                ss << _controls->PARTICLE_COUNT;
-                std::string buf2(ss.str());
 
                 ImGui::Text("Size");
                 ImGui::SetNextItemWidth(60);
                 ImGui::InputText("##Size", &buf1, ImGuiInputTextFlags_CharsDecimal);
                 ImGui::Separator();
-                ImGui::Text("Particles");
-                ImGui::SetNextItemWidth(80);
-                ImGui::InputText("##Particles", &buf2, ImGuiInputTextFlags_CharsDecimal);
+                ImGui::Text("Single Press");
+                ImGui::Checkbox("##checkbox", &_controls->SINGLE_SPAWN);
 
                 _controls->PEN_SIZE = std::stof(buf1);
-                _controls->PARTICLE_COUNT = std::stoi(buf2);
                 break;
             }
             case Controls::BMT::M_ERASE:{
@@ -93,8 +88,8 @@ void ViewSpace::render() {
 
     float middleX = ImGui::GetWindowPos().x + _width / 2.f;
     float middleY = ImGui::GetWindowPos().y + _height / 2.f + 20;
-    ImVec2 min(middleX - (_width / 2.f) + padding, middleY - (_height / 2.f) * ((float)_mf->getWidth() / (float)_mf->getWidth()) + padding);
-    ImVec2 max(middleX + (_width / 2.f) - padding, middleY + (_height / 2.f) * ((float)_mf->getWidth() / (float)_mf->getWidth()) - padding);
+    ImVec2 min(middleX - (_width / 2.f) + padding, middleY - (_width / 2.f) + padding);
+    ImVec2 max(middleX + (_width / 2.f) - padding, middleY + (_width / 2.f) - padding);
 
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     drawList->AddImage(reinterpret_cast<ImTextureID>(_txt->get()),
@@ -111,22 +106,26 @@ void ViewSpace::render() {
     if(_controls->BRUSH_MODE == Controls::BMT::M_SPAWN){
         if (mousePos.x > min.x && mousePos.y > min.y + 20 && mousePos.x < max.x && mousePos.y < max.y - 20)
         {
-            float f =  (_width / 2.f - 5.f * padding) / ((float)_mf->getWidth() * _zoom);
+            float f =  (_width / 2.f - padding) / ((float)_mf->getWidth() * _zoom);
             ImGui::GetWindowDrawList()->AddCircle(mousePos, _controls->PEN_SIZE  * f, ImColor(ImVec4(0.2f, .4f, .8f, .8f)), 64, 2.f);
         }
     }
     else if(_controls->BRUSH_MODE == Controls::BMT::M_ERASE){
         if (mousePos.x > min.x && mousePos.y > min.y + 20 && mousePos.x < max.x && mousePos.y < max.y - 20)
         {
-            float f =  (_width / 2.f - 5.f * padding) / ((float)_mf->getWidth() * _zoom);
+            float f =  (_width / 2.f - padding) / ((float)_mf->getWidth() * _zoom);
             ImGui::GetWindowDrawList()->AddCircle(mousePos, _controls->ERASER_SIZE  * f, ImColor(ImVec4(1.f, .2f, .2f, .8f)), 64, 2.f);
         }
     }
 
+    _controls->MOUSE_IN_SPACE = (mousePos.x > min.x && mousePos.y > min.y + 70 && mousePos.x < max.x && mousePos.y < max.y);
+
+    float scale = (float)_mf->getWidth() / (max.x - min.x - padding);
+    _controls->MOUSE_X = (mousePos.x - middleX) * scale * _zoom + (float)_mf->getWidth() / 2.f;
+    _controls->MOUSE_Y = (mousePos.y - middleY) * scale * -_zoom + (float)_mf->getHeight() / 2.f;
 
     ImGui::End();
     ImGui::PopStyleVar();
-
 }
 
 float ViewSpace::getWidth() const {

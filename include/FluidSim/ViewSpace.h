@@ -26,7 +26,7 @@ private:
 
     Controls* _controls;
 
-    float _zoom = 1.f;
+    float _zoom = 1.2f;
 
     float _width = 1.f;
     float _height = 1.f;

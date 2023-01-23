@@ -13,6 +13,8 @@ struct Constants{
     float FRICTION = .008f;
     int COLLISION_RADIUS = 2;
     float MAX_VEL = 10.f;
+
+    unsigned int TEXTURE_ID;
 };
 
 #endif //FLUIDSIM_CONSTANTS_H
