@@ -81,7 +81,7 @@ void ConstantsEditor::render() {
     _constants->P0 = std::stof(buf4);
     _constants->STIFFNESS = std::stof(buf5);
     _constants->STIFFNESS_NEAR = std::stof(buf6);
-    _constants->MAX_PRESS = std::stod(buf7);
+    _constants->MAX_PRESS = std::stof(buf7);
     _constants->MAX_D = std::stof(buf8);
     _constants->FRICTION = std::stof(buf9);
     _constants->COLLISION_RADIUS = std::stoi(buf10);

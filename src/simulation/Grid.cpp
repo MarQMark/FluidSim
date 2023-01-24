@@ -44,9 +44,19 @@ void Grid::possibleNeighbours(std::vector<Particle *>& posNeigh, Particle* p) {
             glm::vec2 i = gpos + glm::vec2(x, y);
             if(i.x >= 0 && i.y >= 0 && i.x < _w && i.y < _h){
                 std::vector<Particle*>* cell = _grid[i.x + _w * i.y];
-                for (Particle* posP : *cell) {
-                    posNeigh.push_back(posP);
+
+                posNeigh.reserve(posNeigh.size() + cell->size());
+                posNeigh.insert(posNeigh.end(), cell->begin(), cell->end());
+
+                if(x == 0 && y == 0){
+                    for(int i2 = 0; i2 < posNeigh.size(); ++i2){
+                        if(p->pos == posNeigh[i2]->pos){
+                            posNeigh.erase(posNeigh.begin() + i2);
+                            i2--;
+                        }
+                    }
                 }
+
             }
         }
     }

@@ -141,7 +141,7 @@ bool DistanceField::color_check(int x, int y, glm::vec2 pos, unsigned char col, 
 void DistanceField::calc_dist(int x, int y, unsigned char target_col) {
     glm::vec2 curr(x, y);
     for (int i = 0; color(curr) != target_col && i < std::max(_width, _height); ++i) {
-        if(*_progress_msg == "KILL"){
+        if(_progress_msg && *_progress_msg == "KILL"){
             exit(0);
         }
 

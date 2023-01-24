@@ -32,6 +32,7 @@ private:
 
     Kikan::Scene* _scene;
 
+    void apply_controls(float dt);
     void apply_external_forces(float dt);
     void apply_viscosity(float dt);
     void advance_particles(float dt);
