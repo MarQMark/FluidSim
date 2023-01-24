@@ -120,6 +120,7 @@ void SimulationSystem::apply_controls(float dt) {
 
     if(_controls->RESET){
         _controls->RESET = false;
+        _lost_ps = 0;
         for (int i = 0; i < _entities.size(); ++i) {
             _scene->removeEntity(_entities[i]);
             i--;

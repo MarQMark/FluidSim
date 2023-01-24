@@ -75,17 +75,28 @@ void ConstantsEditor::render() {
     #pragma endregion
 
 
-    _constants->RADIUS = std::stof(buf1);
-    _constants->SIGMA = std::stof(buf2);
-    _constants->BETA = std::stof(buf3);
-    _constants->P0 = std::stof(buf4);
-    _constants->STIFFNESS = std::stof(buf5);
-    _constants->STIFFNESS_NEAR = std::stof(buf6);
-    _constants->MAX_PRESS = std::stof(buf7);
-    _constants->MAX_D = std::stof(buf8);
-    _constants->FRICTION = std::stof(buf9);
-    _constants->COLLISION_RADIUS = std::stoi(buf10);
-    _constants->MAX_VEL = std::stof(buf11);
+    if(!buf1.empty())
+        _constants->RADIUS = std::stof(buf1);
+    if(!buf2.empty())
+        _constants->SIGMA = std::stof(buf2);
+    if(!buf3.empty())
+        _constants->BETA = std::stof(buf3);
+    if(!buf4.empty())
+        _constants->P0 = std::stof(buf4);
+    if(!buf5.empty())
+        _constants->STIFFNESS = std::stof(buf5);
+    if(!buf6.empty())
+        _constants->STIFFNESS_NEAR = std::stof(buf6);
+    if(!buf7.empty())
+        _constants->MAX_PRESS = std::stof(buf7);
+    if(!buf8.empty())
+        _constants->MAX_D = std::stof(buf8);
+    if(!buf9.empty())
+        _constants->FRICTION = std::stof(buf9);
+    if(!buf10.empty())
+        _constants->COLLISION_RADIUS = std::stoi(buf10);
+    if(!buf11.empty())
+        _constants->MAX_VEL = std::stof(buf11);
 
 
     ImGui::End();
