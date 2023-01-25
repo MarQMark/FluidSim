@@ -13,8 +13,14 @@ struct Controls{
         M_PULL
     } typedef FMT;
 
+    enum RENDER_MODE_TYPE{
+        PARTICLES,
+        GRID
+    } typedef RMT;
+
     bool RESET = false;
     bool PAUSE = false;
+    int RENDER_MODE = RMT::GRID;
     bool REBUILD = false;
     bool LOADING = false;
 

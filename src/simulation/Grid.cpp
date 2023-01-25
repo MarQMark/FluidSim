@@ -104,3 +104,19 @@ void Grid::clear() {
     }
 }
 
+unsigned int Grid::getWidth() const {
+    return _w;
+}
+
+unsigned int Grid::getHeight() const {
+    return _h;
+}
+
+float Grid::getSize() const {
+    return _size;
+}
+
+unsigned int Grid::cellCount(int index) {
+    return _grid[index % _grid.size()]->size();
+}
+

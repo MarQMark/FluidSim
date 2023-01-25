@@ -8,16 +8,19 @@
 #include "Kikan/ecs/Scene.h"
 #include "Stats.h"
 #include "Controls.h"
+#include "RenderSystem.h"
 #include <map>
 
 class SimulationSystem : public Kikan::ISystem{
 public:
-    explicit SimulationSystem(DistanceField* distanceField, Constants* constants, Controls* controls, Stats* stats, Kikan::Scene* scene);
+    explicit SimulationSystem(DistanceField* distanceField, Constants* constants, Controls* controls, Stats* stats, Kikan::Scene* scene, RenderSystem* rs);
     ~SimulationSystem() override;
 
     void update(double dt) override;
 
     void setDistanceField(DistanceField* distanceField);
+
+    Grid* getGrid();
 private:
     Grid* _grid;
     DistanceField* _distanceField;
@@ -31,6 +34,7 @@ private:
     bool _extern_force = false;
 
     Kikan::Scene* _scene;
+    RenderSystem* _rs;
 
     void apply_controls(float dt);
     void apply_external_forces(float dt);

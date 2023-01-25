@@ -1,15 +1,14 @@
 #include <iostream>
-#include <chrono>
 #include "FluidSim/SimulationSystem.h"
-#include "FluidSim/Particle.h"
 #include "Kikan/ecs/components/Texture2DSprite.h"
 #include "Kikan/util/Timer.h"
 
-SimulationSystem::SimulationSystem(DistanceField* distanceField, Constants* constants, Controls* controls, Stats* stats, Kikan::Scene* scene)
-    : _distanceField(distanceField), _constants(constants), _controls(controls), _stats(stats), _scene(scene){
+SimulationSystem::SimulationSystem(DistanceField* distanceField, Constants* constants, Controls* controls, Stats* stats, Kikan::Scene* scene, RenderSystem* rs)
+    : _distanceField(distanceField), _constants(constants), _controls(controls), _stats(stats), _scene(scene), _rs(rs){
     singleInclude(Particle);
 
     _grid = new Grid(glm::vec2(0,0), _distanceField->getWidth() / _constants->RADIUS, _distanceField->getHeight() / _constants->RADIUS, _constants->RADIUS);
+    _rs->setGrid(_grid);
 }
 
 SimulationSystem::~SimulationSystem() {
@@ -114,6 +113,7 @@ void SimulationSystem::apply_controls(float dt) {
     if(_controls->REBUILD){
         delete _grid;
         _grid = new Grid(glm::vec2(0, 0), _distanceField->getWidth() / _constants->RADIUS, _distanceField->getHeight() / _constants->RADIUS, _constants->RADIUS);
+        _rs->setGrid(_grid);
         _controls->REBUILD = false;
         _controls->RESET = true;
     }
@@ -293,6 +293,9 @@ float map(float x, float in_min, float in_max, float out_min, float out_max)
 }
 
 void SimulationSystem::update_sprite() {
+    if(_controls->RENDER_MODE != Controls::RMT::PARTICLES)
+        return;
+
     if(_input->keyPressed(Kikan::Key::P))
         Kikan::Timer timer("Update Sprite");
 
@@ -337,4 +340,8 @@ void SimulationSystem::update_stats() {
 
     _stats->LOST_PARTICLES = _lost_ps;
     _stats->PARTICLES = _entities.size();
+}
+
+Grid *SimulationSystem::getGrid() {
+    return _grid;
 }

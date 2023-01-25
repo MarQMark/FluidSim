@@ -14,6 +14,11 @@ public:
     void moveParticle(Particle* p);
     void possibleNeighbours(std::vector<Particle*>& posNeigh, Particle* p);
     int count();
+
+    unsigned int getWidth() const;
+    unsigned int getHeight() const;
+    float getSize() const;
+    unsigned int cellCount(int index);
 private:
     glm::vec2 _pos;
     unsigned int _w;

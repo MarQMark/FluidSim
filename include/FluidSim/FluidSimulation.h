@@ -11,6 +11,7 @@
 #include "SimulationSystem.h"
 #include "../../src/file_browser/ImGuiFileBrowser.h"
 #include "StatsViewer.h"
+#include "RenderSystem.h"
 
 class FluidSimulation : Kikan::Renderer::Override {
 public:
@@ -27,6 +28,7 @@ private:
     Kikan::Engine* _engine;
     Kikan::Texture2D* _particle2D;
     SimulationSystem* _sim_system;
+    RenderSystem* _render_system;
     Kikan::Entity* _background;
 
     ConstantsEditor* _ce;

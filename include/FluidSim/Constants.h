@@ -11,7 +11,7 @@ struct Constants{
     float MAX_PRESS = 1e5;
     float MAX_D = 10;
     float FRICTION = .002f;
-    int COLLISION_RADIUS = 2;
+    int COLLISION_RADIUS = 0;
     float MAX_VEL = 10.f;
 
     unsigned int TEXTURE_ID;

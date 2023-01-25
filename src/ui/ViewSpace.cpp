@@ -29,6 +29,12 @@ void ViewSpace::render() {
             _controls->RESET = true;
 
         ImGui::Separator();
+        const char* render[] ={ICON_FA_CIRCLE" Particle", ICON_FA_TH" Grid"};
+        ImGui::Text(ICON_FA_EYE);
+        ImGui::SetNextItemWidth(110);
+        ImGui::Combo("##Render", &_controls->RENDER_MODE, render, 2);
+
+        ImGui::Separator();
         const char* modes[] ={ICON_FA_PEN" Spawn", ICON_FA_ERASER" Erase", ICON_FA_ARROW_DOWN" Force"};
         ImGui::Text("Mode");
         ImGui::SetNextItemWidth(100);

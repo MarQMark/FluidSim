@@ -13,6 +13,7 @@
 #include "../file_browser/ImGuiFileBrowser.h"
 
 #include "IconFontAwesome/IconsFontAwesome5.h"
+#include "FluidSim/SpriteRenderSystem.h"
 
 #define TEXTURE_SIZE 512
 #define TEXTURE_SIZE_HALF (TEXTURE_SIZE / 2.f)
@@ -104,6 +105,7 @@ FluidSimulation::FluidSimulation() {
     _maps.push_back(new MapFile("assets/slope.png"));
     _curr_map = _maps[0];
     _engine->getRenderer()->shader()->uniform1lf("u_pTexture", (float)_maps.size() + 2);
+    _engine->getRenderer()->shader()->uniform1lf("u_renderMode", 0.f);
 
 
     // Setup Widgets
@@ -116,9 +118,12 @@ FluidSimulation::FluidSimulation() {
 
 
     // Engine Stuff
-    _engine->getScene()->addSystem(new Kikan::SpriteRenderSystem());
-    _sim_system = new SimulationSystem(_curr_map->getDistanceField(), _ce->getConstants(), _vs->getControls(), _sv->getStats(), _engine->getScene());
+    _engine->getScene()->addSystem(new SpriteRenderSystem(_vs->getControls()));
+    _render_system = new RenderSystem(_vs->getControls(), _engine->getScene());
+    _engine->getScene()->addSystem(_render_system);
+    _sim_system = new SimulationSystem(_curr_map->getDistanceField(), _ce->getConstants(), _vs->getControls(), _sv->getStats(), _engine->getScene(), _render_system);
     _engine->getScene()->addSystem(_sim_system);
+
 
     _background = createBox(glm::vec2(0, (float)_curr_map->getHeight()), (float)_curr_map->getWidth(), (float)_curr_map->getHeight(), _curr_map->getTexture()->get());
     _engine->getScene()->addEntity(_background);
@@ -162,6 +167,8 @@ bool FluidSimulation::shouldRun() const {
 
 void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
     Kikan::Renderer::queryErrors("Begin");
+
+    _engine->getRenderer()->shader()->uniform1lf("u_renderMode", _vs->getControls()->RENDER_MODE == Controls::RMT::GRID ? 0. : 1.);
 
     // Set camera
     _engine->getScene()->camera()->reset();
