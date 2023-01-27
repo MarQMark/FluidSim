@@ -78,6 +78,8 @@ FluidSimulation::FluidSimulation() {
     _engine->getRenderer()->shader()->bind();
     _engine->getRenderer()->shader()->uniform1li("u_sampler", 0);
 
+    _engine->getRenderer()->addBatch(new Kikan::ManuelBatch(Kikan::VertexRegistry::getLayout<Kikan::DefaultVertex>(), sizeof(Kikan::DefaultVertex)), 1);
+
 
     // Setup ImGUI
     ImGui::CreateContext();
@@ -119,7 +121,7 @@ FluidSimulation::FluidSimulation() {
 
     // Engine Stuff
     _engine->getScene()->addSystem(new SpriteRenderSystem(_vs->getControls()));
-    _render_system = new RenderSystem(_vs->getControls(), _engine->getScene());
+    _render_system = new RenderSystem(_vs->getControls(), _sv->getStats(), _engine->getScene());
     _engine->getScene()->addSystem(_render_system);
     _sim_system = new SimulationSystem(_curr_map->getDistanceField(), _ce->getConstants(), _vs->getControls(), _sv->getStats(), _engine->getScene(), _render_system);
     _engine->getScene()->addSystem(_sim_system);
@@ -209,6 +211,8 @@ void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
 }
 
 void FluidSimulation::postRender(Kikan::Renderer* renderer, double dt) {
+    renderer->getBatch(1)->render();
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     render_dockspace();

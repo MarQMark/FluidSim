@@ -8,7 +8,7 @@ SpriteRenderSystem::SpriteRenderSystem(Controls* controls) : _controls(controls)
 
 void SpriteRenderSystem::update(double dt) {
     if(_input->keyPressed(Kikan::Key::P))
-        Kikan::Timer timer("Render");
+        Kikan::Timer timer("Render Sprite");
 
     for (Kikan::Entity *e: _entities) {
         auto *texture2DSprite = e->getComponent<Kikan::Texture2DSprite>();

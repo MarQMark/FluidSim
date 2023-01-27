@@ -5,21 +5,32 @@
 #include "Grid.h"
 #include "Kikan/ecs/Scene.h"
 #include "Controls.h"
+#include "Stats.h"
 
 class RenderSystem : public Kikan::IRenderSystem {
 public:
-    explicit RenderSystem(Controls* controls, Kikan::Scene* scene);
+    explicit RenderSystem(Controls* controls, Stats* stats, Kikan::Scene* scene);
 
     void update(double dt) override;
 
     void setGrid(Grid* grid);
 private:
     Grid* _grid{};
+    uint64_t _cellCount;
 
+    Stats* _stats;
     Controls* _controls;
     Kikan::Scene* _scene;
 
-    void gen_quads();
+    std::vector<float> _rps; // Relative particle count grid
+    std::vector<float> _alphas;
+
+    std::vector<Kikan::DefaultVertex> _vertices;
+    std::vector<GLuint> _indices;
+
+    void update_color();
+    void update_vertices();
+    void gen_render_data();
 };
 
 #endif //FLUIDSIM_RENDER_SYSTEM_H
