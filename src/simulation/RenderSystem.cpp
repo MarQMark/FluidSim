@@ -11,16 +11,16 @@ void RenderSystem::update(double dt) {
     if(_controls->RENDER_MODE != Controls::RMT::GRID)
         return;
 
-    //Kikan::Timer timer1("Render Grid");
+    Kikan::Timer timer1(&_stats->PERFORMANCE["Render Grid"], Kikan::Timer::Precision::MICRO);
 
     {
-        //Kikan::Timer timer("Render Loop");
+        Kikan::Timer timer(&_stats->PERFORMANCE["Render Loop"], Kikan::Timer::Precision::MICRO);
 
         update_color();
         update_vertices();
     }
 
-    //Kikan::Timer timer("Render Batch");
+    Kikan::Timer timer(&_stats->PERFORMANCE["Render Batch"], Kikan::Timer::Precision::MICRO);
     _renderer->getBatch(1)->overrideVertices(_vertices, _indices);
 }
 

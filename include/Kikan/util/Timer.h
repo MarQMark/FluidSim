@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <chrono>
+#include <utility>
 
 namespace Kikan{
     class Timer{
@@ -14,10 +15,15 @@ namespace Kikan{
             MINUTES
         };
 
-        Timer(std::string tag, Precision p = Precision::MILLI) : _tag(tag), _p(p) {};
-        Timer(long long* t, Precision p = Precision::MILLI) : _t(t), _p(p) {};
+        explicit Timer(std::string tag, Precision p = Precision::MILLI) : _tag(std::move(tag)), _p(p) {
+            start();
+        };
+        explicit Timer(long long* t, Precision p = Precision::MILLI) : _t(t), _p(p) {
+            start();
+        };
 
         ~Timer(){
+            stop();
             long long duration = time(_p);
             if(_t){
                 *_t = duration;
@@ -57,7 +63,7 @@ namespace Kikan{
 
     private:
         std::string _tag;
-        long long* _t;
+        long long* _t = nullptr;
 
         Precision _p;
 

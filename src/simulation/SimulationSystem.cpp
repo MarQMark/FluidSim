@@ -57,9 +57,6 @@ void SimulationSystem::update(double dt) {
     update_velocity(dtf);
     update_sprite();
     update_stats();
-
-    if(_input->keyPressed(Kikan::Key::P))
-        std::cout << "--------------------------" << std::endl;
 }
 
 #pragma clang diagnostic push
@@ -131,8 +128,7 @@ void SimulationSystem::apply_controls(float dt) {
 
 
 void SimulationSystem::apply_external_forces(float dt) {
-    if(_input->keyPressed(Kikan::Key::P))
-        Kikan::Timer timer("Apply External Forces");
+    Kikan::Timer timer(&_stats->PERFORMANCE["Apply External Forces"], Kikan::Timer::Precision::MICRO);
 
     for (Kikan::Entity* entity : _entities) {
         auto* p = entity->getComponent<Particle>();
@@ -149,8 +145,7 @@ void SimulationSystem::apply_external_forces(float dt) {
 }
 
 void SimulationSystem::apply_viscosity(float dt) {
-    if(_input->keyPressed(Kikan::Key::P))
-        Kikan::Timer timer("Apply Viscosity");
+    Kikan::Timer timer(&_stats->PERFORMANCE["Apply Viscosity"], Kikan::Timer::Precision::MICRO);
 
     for (auto* entity : _entities) {
         auto* p = entity->getComponent<Particle>();
@@ -172,8 +167,7 @@ void SimulationSystem::apply_viscosity(float dt) {
 }
 
 void SimulationSystem::advance_particles(float dt) {
-    if(_input->keyPressed(Kikan::Key::P))
-        Kikan::Timer timer("Advance Particles");
+    Kikan::Timer timer(&_stats->PERFORMANCE["Advance Particles"], Kikan::Timer::Precision::MICRO);
 
     _grid->clear();
     for (auto* entity : _entities) {
@@ -191,8 +185,7 @@ void SimulationSystem::advance_particles(float dt) {
 }
 
 void SimulationSystem::update_neighbours() {
-    if(_input->keyPressed(Kikan::Key::P))
-        Kikan::Timer timer("Update Neighbors");
+    Kikan::Timer timer(&_stats->PERFORMANCE["Update Neighbors"], Kikan::Timer::Precision::MICRO);
 
     for (auto* entity : _entities) {
         auto* p = entity->getComponent<Particle>();
@@ -203,8 +196,7 @@ void SimulationSystem::update_neighbours() {
 }
 
 void SimulationSystem::double_density_relaxation(float dt) {
-    if(_input->keyPressed(Kikan::Key::P))
-        Kikan::Timer timer("Double Density Relaxation");
+    Kikan::Timer timer(&_stats->PERFORMANCE["Double Density Relaxation"], Kikan::Timer::Precision::MICRO);
 
     for (auto* entity : _entities) {
         auto *i = entity->getComponent<Particle>();
@@ -254,8 +246,7 @@ void SimulationSystem::double_density_relaxation(float dt) {
 }
 
 void SimulationSystem::resolve_collisions(float dt) {
-    if(_input->keyPressed(Kikan::Key::P))
-        Kikan::Timer timer("Resolve Collision");
+    Kikan::Timer timer(&_stats->PERFORMANCE["Resolve Collision"], Kikan::Timer::Precision::MICRO);
 
     for (auto* entity : _entities) {
         auto *p = entity->getComponent<Particle>();
@@ -278,8 +269,7 @@ void SimulationSystem::resolve_collisions(float dt) {
 }
 
 void SimulationSystem::update_velocity(float dt) {
-    if(_input->keyPressed(Kikan::Key::P))
-        Kikan::Timer timer("Update Velocity");
+    Kikan::Timer timer(&_stats->PERFORMANCE["Update Velocity"], Kikan::Timer::Precision::MICRO);
 
     for (auto* entity : _entities) {
         auto *p = entity->getComponent<Particle>();
@@ -296,8 +286,7 @@ void SimulationSystem::update_sprite() {
     if(_controls->RENDER_MODE != Controls::RMT::PARTICLES)
         return;
 
-    if(_input->keyPressed(Kikan::Key::P))
-        Kikan::Timer timer("Update Sprite");
+    Kikan::Timer timer(&_stats->PERFORMANCE["Update Sprite"], Kikan::Timer::Precision::MICRO);
 
     float max = -10000;
     float min = 10000;
@@ -326,8 +315,7 @@ void SimulationSystem::setDistanceField(DistanceField* distanceField) {
 }
 
 void SimulationSystem::update_stats() {
-    if(_input->keyPressed(Kikan::Key::P))
-        Kikan::Timer timer("Update Stats");
+    Kikan::Timer timer(&_stats->PERFORMANCE["Update Stats"], Kikan::Timer::Precision::MICRO);
 
     for (int i = 0; i < _entities.size(); ++i) {
         auto* p = _entities[i]->getComponent<Particle>();

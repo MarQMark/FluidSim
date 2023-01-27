@@ -16,18 +16,29 @@ void StatsViewer::render() {
     std::stringstream ss;
     ss << "FPS: ";
     ss << _stats->FPS;
-    ImGui::Text(ss.str().c_str());
+    ImGui::Text("%s", ss.str().c_str());
     ss.str(std::string());
 
     ss << "Particles: ";
     ss << _stats->PARTICLES;
-    ImGui::Text(ss.str().c_str());
+    ImGui::Text("%s", ss.str().c_str());
     ss.str(std::string());
 
     ss << "Lost Particles: ";
     ss << _stats->LOST_PARTICLES;
-    ImGui::Text(ss.str().c_str());
+    ImGui::Text("%s", ss.str().c_str());
     ss.str(std::string());
+
+    if(!_stats->PERFORMANCE.empty())
+        ImGui::Separator();
+
+    for (const auto& p : _stats->PERFORMANCE) {
+        ss << p.first;
+        ss << " : ";
+        ss << p.second;
+        ImGui::Text("%s", ss.str().c_str());
+        ss.str(std::string());
+    }
 
     ImGui::End();
 }
