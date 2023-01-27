@@ -72,12 +72,15 @@ FluidSimulation::FluidSimulation() {
 
     //Setup Engine
     _engine = new Kikan::Engine();
+    std::string title("Fluid Simulation");
+    _engine->setTitle(title);
     delete _engine->getRenderer()->shader();
     _engine->getRenderer()->shader(new Kikan::Shader("shaders/default.vert", "shaders/main.frag"));
     _engine->getRenderer()->overrideRender(this);
     _engine->getRenderer()->shader()->bind();
     _engine->getRenderer()->shader()->uniform1li("u_sampler", 0);
 
+    _engine->getRenderer()->addBatch(new Kikan::ManuelBatch(Kikan::VertexRegistry::getLayout<Kikan::DefaultVertex>(), sizeof(Kikan::DefaultVertex)), 0);
     _engine->getRenderer()->addBatch(new Kikan::ManuelBatch(Kikan::VertexRegistry::getLayout<Kikan::DefaultVertex>(), sizeof(Kikan::DefaultVertex)), 1);
 
 
@@ -120,10 +123,12 @@ FluidSimulation::FluidSimulation() {
 
 
     // Engine Stuff
-    _engine->getScene()->addSystem(new SpriteRenderSystem(_vs->getControls()));
-    _render_system = new RenderSystem(_vs->getControls(), _sv->getStats(), _engine->getScene());
-    _engine->getScene()->addSystem(_render_system);
-    _sim_system = new SimulationSystem(_curr_map->getDistanceField(), _ce->getConstants(), _vs->getControls(), _sv->getStats(), _engine->getScene(), _render_system);
+    _engine->getScene()->addSystem(new Kikan::SpriteRenderSystem());
+    _g_render_system = new GridRenderSystem(_vs->getControls(), _sv->getStats(), _engine->getScene());
+    _engine->getScene()->addSystem(_g_render_system);
+    _p_render_system = new ParticleRenderSystem(_vs->getControls(), _ce->getConstants(), _sv->getStats());
+    _engine->getScene()->addSystem(_p_render_system);
+    _sim_system = new SimulationSystem(_curr_map->getDistanceField(), _ce->getConstants(), _vs->getControls(), _sv->getStats(), _engine->getScene(), _g_render_system);
     _engine->getScene()->addSystem(_sim_system);
 
 
@@ -142,6 +147,7 @@ FluidSimulation::FluidSimulation() {
         }
     }
     _particle2D = new Kikan::Texture2D(TEXTURE_SIZE, TEXTURE_SIZE, data.data());
+    _engine->getRenderer()->getBatch(0)->addTexture((int)_particle2D->get(), 0);
     _ce->getConstants()->TEXTURE_ID = _particle2D->get();
 }
 
@@ -211,6 +217,7 @@ void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
 }
 
 void FluidSimulation::postRender(Kikan::Renderer* renderer, double dt) {
+    renderer->getBatch(0)->render();
     renderer->getBatch(1)->render();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -297,6 +304,7 @@ void FluidSimulation::render_ui() {
         ImGui::OpenPopup("Load Map");
     if(_fileBrowser.showFileDialog("Load Map", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(ImGui::GetWindowWidth() * .75f, ImGui::GetWindowHeight() * .75f), ".png"))
         _maps.push_back(new MapFile(_fileBrowser.selected_path, &_loading, &_loading_msg));
+    _vs->getControls()->POPUP_OPEN = ImGui::IsPopupOpen("Load Map");
 
     _vs->render();
     _ce->render();

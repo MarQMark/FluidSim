@@ -2,13 +2,12 @@
 #include "Kikan/ecs/components/Texture2DSprite.h"
 #include "Kikan/util/Timer.h"
 
-SpriteRenderSystem::SpriteRenderSystem(Controls* controls) : _controls(controls) {
+SpriteRenderSystem::SpriteRenderSystem(Controls* controls, Stats* stats) : _controls(controls), _stats(stats) {
     singleInclude(Kikan::Texture2DSprite);
 }
 
 void SpriteRenderSystem::update(double dt) {
-    if(_input->keyPressed(Kikan::Key::P))
-        Kikan::Timer timer("Render Sprite");
+    Kikan::Timer timer(&_stats->PERFORMANCE["Render Sprite"], Kikan::Timer::Precision::MICRO);
 
     for (Kikan::Entity *e: _entities) {
         auto *texture2DSprite = e->getComponent<Kikan::Texture2DSprite>();

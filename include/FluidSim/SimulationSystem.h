@@ -8,12 +8,12 @@
 #include "Kikan/ecs/Scene.h"
 #include "Stats.h"
 #include "Controls.h"
-#include "RenderSystem.h"
+#include "GridRenderSystem.h"
 #include <map>
 
 class SimulationSystem : public Kikan::ISystem{
 public:
-    explicit SimulationSystem(DistanceField* distanceField, Constants* constants, Controls* controls, Stats* stats, Kikan::Scene* scene, RenderSystem* rs);
+    explicit SimulationSystem(DistanceField* distanceField, Constants* constants, Controls* controls, Stats* stats, Kikan::Scene* scene, GridRenderSystem* rs);
     ~SimulationSystem() override;
 
     void update(double dt) override;
@@ -34,7 +34,7 @@ private:
     bool _extern_force = false;
 
     Kikan::Scene* _scene;
-    RenderSystem* _rs;
+    GridRenderSystem* _rs;
 
     void apply_controls(float dt);
     void apply_external_forces(float dt);
@@ -44,8 +44,10 @@ private:
     void double_density_relaxation(float dt);
     void resolve_collisions(float dt);
     void update_velocity(float dt);
-    void update_sprite();
+
     void update_stats();
+
+    void limit_pos(Particle* p);
 };
 
 #endif //FLUIDSIM_SIMULATION_SYSTEM_H

@@ -3,7 +3,7 @@
 #include "Kikan/ecs/components/Texture2DSprite.h"
 #include "Kikan/util/Timer.h"
 
-SimulationSystem::SimulationSystem(DistanceField* distanceField, Constants* constants, Controls* controls, Stats* stats, Kikan::Scene* scene, RenderSystem* rs)
+SimulationSystem::SimulationSystem(DistanceField* distanceField, Constants* constants, Controls* controls, Stats* stats, Kikan::Scene* scene, GridRenderSystem* rs)
     : _distanceField(distanceField), _constants(constants), _controls(controls), _stats(stats), _scene(scene), _rs(rs){
     singleInclude(Particle);
 
@@ -17,16 +17,6 @@ SimulationSystem::~SimulationSystem() {
 
 Kikan::Entity* createParticle2(glm::vec2 pos, float w, float h, GLuint txtID){
     auto* entity = new Kikan::Entity();
-
-    auto* sprite = new Kikan::Texture2DSprite();
-    sprite->points[0] = pos + glm::vec2(-w / 2.f, h / 2.f);
-    sprite->points[1] = pos + glm::vec2(w / 2.f, h / 2.f);
-    sprite->points[2] = pos + glm::vec2(w / 2.f, -h / 2.f);
-    sprite->points[3] = pos + glm::vec2(-w / 2.f, -h / 2.f);
-    sprite->color = glm::vec4(0, 0, .8, 1.);
-    sprite->textureID = txtID;
-    sprite->layer = -1;
-    entity->addComponent(sprite);
 
     auto* particle = new Particle();
     particle->pos = pos;
@@ -55,7 +45,6 @@ void SimulationSystem::update(double dt) {
     double_density_relaxation(dtf);
     resolve_collisions(dtf);
     update_velocity(dtf);
-    update_sprite();
     update_stats();
 }
 
@@ -65,9 +54,11 @@ void SimulationSystem::apply_controls(float dt) {
     _extern_force = false;
 
     if(_input->mousePressed(Kikan::Mouse::BUTTON_1) &&
-       _controls->MOUSE_IN_SPACE &&
-       _controls->MOUSE_X > 0 && _controls->MOUSE_X < (float)_distanceField->getWidth() &&
-       _controls->MOUSE_Y > 0 && _controls->MOUSE_Y < (float)_distanceField->getHeight())
+        !_controls->LOADING &&
+        !_controls->POPUP_OPEN &&
+        _controls->MOUSE_IN_SPACE &&
+        _controls->MOUSE_X > 0 && _controls->MOUSE_X < (float)_distanceField->getWidth() &&
+        _controls->MOUSE_Y > 0 && _controls->MOUSE_Y < (float)_distanceField->getHeight())
     {
         switch (_controls->BRUSH_MODE) {
             case Controls::BMT::M_SPAWN: {
@@ -175,10 +166,7 @@ void SimulationSystem::advance_particles(float dt) {
         p->ppos = p->pos;
         p->pos += dt * p->vel;
 
-        p->pos.x = std::max(p->pos.x, _constants->RADIUS);
-        p->pos.y = std::max(p->pos.y, _constants->RADIUS);
-        p->pos.x = std::min(p->pos.x, (float)_distanceField->getWidth() - _constants->RADIUS);
-        p->pos.y = std::min(p->pos.y, (float)_distanceField->getHeight() - _constants->RADIUS);
+        limit_pos(p);
 
         _grid->moveParticle(p);
     }
@@ -242,6 +230,7 @@ void SimulationSystem::double_density_relaxation(float dt) {
             }
         }
         i->pos += dx;
+        limit_pos(i);
     }
 }
 
@@ -264,6 +253,8 @@ void SimulationSystem::resolve_collisions(float dt) {
             tangent *= dt * _constants->FRICTION * glm::dot(glm::normalize(p->pos - p->ppos), tangent);
             p->pos -= tangent;
             p->pos -= .8f * (float)(dist + _constants->COLLISION_RADIUS) * normal;
+
+            limit_pos(p);
         }
     }
 }
@@ -274,39 +265,6 @@ void SimulationSystem::update_velocity(float dt) {
     for (auto* entity : _entities) {
         auto *p = entity->getComponent<Particle>();
         p->vel = (p->pos - p->ppos) / dt;
-    }
-}
-
-float map(float x, float in_min, float in_max, float out_min, float out_max)
-{
-    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
-
-void SimulationSystem::update_sprite() {
-    if(_controls->RENDER_MODE != Controls::RMT::PARTICLES)
-        return;
-
-    Kikan::Timer timer(&_stats->PERFORMANCE["Update Sprite"], Kikan::Timer::Precision::MICRO);
-
-    float max = -10000;
-    float min = 10000;
-    for (auto* entity : _entities) {
-        auto *p = entity->getComponent<Particle>();
-
-        max = std::max(max, p->index);
-        min = std::min(min, p->index);
-    }
-
-    for (auto* entity : _entities) {
-        auto *p = entity->getComponent<Particle>();
-
-        auto* sprite = entity->getComponent<Kikan::Texture2DSprite>();
-        glm::vec2 delta = p->pos - sprite->points[0] + glm::vec2(-5, 5);
-        sprite->points[0] += delta;
-        sprite->points[1] += delta;
-        sprite->points[2] += delta;
-        sprite->points[3] += delta;
-        sprite->color = glm::vec4(.0f , .0f, map(p->index, min, max, 1, 0), 1.f);
     }
 }
 
@@ -332,4 +290,9 @@ void SimulationSystem::update_stats() {
 
 Grid *SimulationSystem::getGrid() {
     return _grid;
+}
+
+void SimulationSystem::limit_pos(Particle* p){
+    p->pos.x = std::min(std::max(p->pos.x, 2 * _constants->RADIUS), (float)_distanceField->getWidth() - 2 * _constants->RADIUS);
+    p->pos.y = std::min(std::max(p->pos.y, 2 * _constants->RADIUS), (float)_distanceField->getHeight() - 2 * _constants->RADIUS);
 }

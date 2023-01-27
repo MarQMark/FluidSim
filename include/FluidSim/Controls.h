@@ -22,6 +22,7 @@ struct Controls{
     bool PAUSE = false;
     int RENDER_MODE = RMT::GRID;
     bool REBUILD = false;
+    bool POPUP_OPEN = false;
     bool LOADING = false;
 
     int BRUSH_MODE = BMT::M_SPAWN;

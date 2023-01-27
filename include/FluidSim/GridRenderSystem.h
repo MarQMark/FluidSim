@@ -7,9 +7,9 @@
 #include "Controls.h"
 #include "Stats.h"
 
-class RenderSystem : public Kikan::IRenderSystem {
+class GridRenderSystem : public Kikan::IRenderSystem {
 public:
-    explicit RenderSystem(Controls* controls, Stats* stats, Kikan::Scene* scene);
+    explicit GridRenderSystem(Controls* controls, Stats* stats, Kikan::Scene* scene);
 
     void update(double dt) override;
 

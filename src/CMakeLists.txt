@@ -20,8 +20,8 @@ set(SOURCE_FILES
         etc/MapFile.cpp
         file_browser/ImGuiFileBrowser.cpp
         ui/StatsViewer.cpp
-        simulation/RenderSystem.cpp
-        simulation/SpriteRenderSystem.cpp)
+        simulation/GridRenderSystem.cpp
+        simulation/SpriteRenderSystem.cpp simulation/ParticleRenderSystem.cpp)
 add_executable(FluidSim ${SOURCE_FILES})
 
 target_include_directories(FluidSim
