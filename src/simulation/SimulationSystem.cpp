@@ -22,7 +22,6 @@ Kikan::Entity* createParticle2(glm::vec2 pos, float w, float h, GLuint txtID){
     particle->pos = pos;
     particle->ppos = pos;
     particle->vel = glm::vec2(0,0);
-    particle->index = 0;
     entity->addComponent(particle);
 
     return entity;
@@ -205,17 +204,6 @@ void SimulationSystem::double_density_relaxation(float dt) {
 
         glm::vec2 P = _constants->STIFFNESS * (p - _constants->P0);
         glm::vec2 P_near = _constants->STIFFNESS_NEAR * p_near;
-
-        P.x = std::max(P.x, -_constants->MAX_PRESS);
-        P.x = std::min(P.x, _constants->MAX_PRESS);
-        P.y = std::max(P.y, -_constants->MAX_PRESS);
-        P.y = std::min(P.y, _constants->MAX_PRESS);
-        P_near.x = std::max(P_near.x, -_constants->MAX_PRESS);
-        P_near.x = std::min(P_near.x, _constants->MAX_PRESS);
-        P_near.y = std::max(P_near.y, -_constants->MAX_PRESS);
-        P_near.y = std::min(P_near.y, _constants->MAX_PRESS);
-
-        i->index = P.y;
 
         glm::vec2 dx = glm::vec2(0);
         for (Particle* j : _p_neighbours[i]) {

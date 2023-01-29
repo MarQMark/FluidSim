@@ -32,21 +32,15 @@ void ConstantsEditor::render() {
     ss << _constants->STIFFNESS_NEAR;
     std::string buf6(ss.str());
     ss.str(std::string());
-    //ss << _constants->MAX_PRESS;
-    //std::string buf7(ss.str());
-    //ss.str(std::string());
-    //ss << _constants->MAX_D;
-    //std::string buf8(ss.str());
-    //ss.str(std::string());
     ss << _constants->FRICTION;
     std::string buf9(ss.str());
     ss.str(std::string());
     ss << _constants->COLLISION_RADIUS;
     std::string buf10(ss.str());
     ss.str(std::string());
-    //ss << _constants->MAX_VEL;
-    //std::string buf11(ss.str());
-    //ss.str(std::string());
+    ss << _constants->RENDER_RADIUS;
+    std::string buf11(ss.str());
+    ss.str(std::string());
     #pragma endregion
 
     #pragma region UI Elements
@@ -62,16 +56,12 @@ void ConstantsEditor::render() {
     ImGui::InputText("##Stiffness", &buf5, ImGuiInputTextFlags_CharsDecimal);
     ImGui::Text("Stiffness near");
     ImGui::InputText("##Stiffness near", &buf6, ImGuiInputTextFlags_CharsDecimal);
-    //ImGui::Text("Max pressure");
-    //ImGui::InputText("##Max pressure", &buf7, ImGuiInputTextFlags_CharsDecimal);
-    //ImGui::Text("Max Displacement");
-    //ImGui::InputText("##Max Displacement", &buf8, ImGuiInputTextFlags_CharsDecimal);
     ImGui::Text("Friction");
     ImGui::InputText("##Friction", &buf9, ImGuiInputTextFlags_CharsDecimal);
     ImGui::Text("Collision Radius");
     ImGui::InputText("##Collision Radius", &buf10, ImGuiInputTextFlags_CharsDecimal);
-    //ImGui::Text("Max Velocity");
-    //ImGui::InputText("##Max Velocity", &buf11, ImGuiInputTextFlags_CharsDecimal);
+    ImGui::Text("Render Radius");
+    ImGui::InputText("##Render Radius", &buf11, ImGuiInputTextFlags_CharsDecimal);
     #pragma endregion
 
 
@@ -87,16 +77,12 @@ void ConstantsEditor::render() {
         _constants->STIFFNESS = std::stof(buf5);
     if(!buf6.empty())
         _constants->STIFFNESS_NEAR = std::stof(buf6);
-    //if(!buf7.empty())
-    //    _constants->MAX_PRESS = std::stof(buf7);
-    //if(!buf8.empty())
-    //    _constants->MAX_D = std::stof(buf8);
     if(!buf9.empty())
         _constants->FRICTION = std::stof(buf9);
     if(!buf10.empty())
         _constants->COLLISION_RADIUS = std::stoi(buf10);
-    //if(!buf11.empty())
-    //    _constants->MAX_VEL = std::stof(buf11);
+    if(!buf11.empty())
+        _constants->RENDER_RADIUS = std::stof(buf11);
 
 
     ImGui::End();

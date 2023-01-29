@@ -14,46 +14,13 @@
 
 #include "IconFontAwesome/IconsFontAwesome5.h"
 #include "FluidSim/SpriteRenderSystem.h"
+#include "Kikan/util/Timer.h"
 
 #define TEXTURE_SIZE 512
 #define TEXTURE_SIZE_HALF (TEXTURE_SIZE / 2.f)
 
 #define RESOLUTION 2048
 
-Kikan::Entity* createParticle(glm::vec2 pos, float w, float h, GLuint txtID){
-    auto* entity = new Kikan::Entity();
-
-    auto* sprite = new Kikan::Texture2DSprite();
-    sprite->points[0] = pos + glm::vec2(-w / 2.f, h / 2.f);
-    sprite->points[1] = pos + glm::vec2(w / 2.f, h / 2.f);
-    sprite->points[2] = pos + glm::vec2(w / 2.f, -h / 2.f);
-    sprite->points[3] = pos + glm::vec2(-w / 2.f, -h / 2.f);
-    sprite->color = glm::vec4(0, 0, .8, 1.);
-    sprite->textureID = txtID;
-    sprite->layer = -1;
-    entity->addComponent(sprite);
-
-    auto* particle = new Particle();
-    particle->pos = pos;
-    particle->ppos = pos;
-    particle->vel = glm::vec2(0,0);
-    particle->index = 0;
-    entity->addComponent(particle);
-
-    return entity;
-}
-
-Kikan::Entity* createLine(glm::vec2 pos, float w, float h){
-    auto* entity = new Kikan::Entity();
-    auto* sprite = new Kikan::QuadSprite();
-    sprite->points[0] = pos;
-    sprite->points[1] = pos + glm::vec2(w, 0);
-    sprite->points[2] = pos + glm::vec2(w, -h);
-    sprite->points[3] = pos + glm::vec2(0, -h);
-    sprite->color = glm::vec4(1, 1, 1, 1.);
-    entity->addComponent(sprite);
-    return entity;
-}
 
 Kikan::Entity* createBox(glm::vec2 pos, float w, float h, GLuint txtID){
     auto* box = new Kikan::Entity();
@@ -72,16 +39,27 @@ FluidSimulation::FluidSimulation() {
 
     //Setup Engine
     _engine = new Kikan::Engine();
+
     std::string title("Fluid Simulation");
     _engine->setTitle(title);
+
+    _engine->getRenderer()->overrideRender(this);
+
     delete _engine->getRenderer()->shader();
     _engine->getRenderer()->shader(new Kikan::Shader("shaders/default.vert", "shaders/main.frag"));
-    _engine->getRenderer()->overrideRender(this);
     _engine->getRenderer()->shader()->bind();
     _engine->getRenderer()->shader()->uniform1li("u_sampler", 0);
 
+    //particle Shader
+    _engine->getRenderer()->shader(new Kikan::Shader("shaders/default.vert", "shaders/particle.frag"), _particleShaderName);
+    _engine->getRenderer()->shader(_particleShaderName)->uniform1li("u_sampler", 0);
+
+    _engine->getRenderer()->shader(new Kikan::Shader("shaders/default.vert", "shaders/particle2.frag"), _particleShaderName2);
+    _engine->getRenderer()->shader(_particleShaderName2)->uniform1li("u_sampler", 0);
+
     _engine->getRenderer()->addBatch(new Kikan::ManuelBatch(Kikan::VertexRegistry::getLayout<Kikan::DefaultVertex>(), sizeof(Kikan::DefaultVertex)), 0);
     _engine->getRenderer()->addBatch(new Kikan::ManuelBatch(Kikan::VertexRegistry::getLayout<Kikan::DefaultVertex>(), sizeof(Kikan::DefaultVertex)), 1);
+    _engine->getRenderer()->addBatch(new Kikan::ManuelBatch(Kikan::VertexRegistry::getLayout<Kikan::DefaultVertex>(), sizeof(Kikan::DefaultVertex)), 2);
 
 
     // Setup ImGUI
@@ -109,6 +87,7 @@ FluidSimulation::FluidSimulation() {
     _maps.push_back(new MapFile("assets/tube.png"));
     _maps.push_back(new MapFile("assets/slope.png"));
     _curr_map = _maps[0];
+    _engine->getRenderer()->shader()->bind();
     _engine->getRenderer()->shader()->uniform1lf("u_pTexture", (float)_maps.size() + 2);
     _engine->getRenderer()->shader()->uniform1lf("u_renderMode", 0.f);
 
@@ -116,6 +95,7 @@ FluidSimulation::FluidSimulation() {
     // Setup Widgets
     glGenFramebuffers(1, &_fbo);
     _view_space_2D = new Kikan::Texture2D(RESOLUTION, RESOLUTION, (float*)nullptr);
+    _p_view_space_2D = new Kikan::Texture2D(RESOLUTION, RESOLUTION, (float*)nullptr);
     _vs = new ViewSpace(_view_space_2D, _curr_map);
     _ce = new ConstantsEditor();
     _mt = new MapTree(&_maps);
@@ -149,6 +129,23 @@ FluidSimulation::FluidSimulation() {
     _particle2D = new Kikan::Texture2D(TEXTURE_SIZE, TEXTURE_SIZE, data.data());
     _engine->getRenderer()->getBatch(0)->addTexture((int)_particle2D->get(), 0);
     _ce->getConstants()->TEXTURE_ID = _particle2D->get();
+
+
+    _engine->getRenderer()->getBatch(2)->addTexture((int)_p_view_space_2D->get(), 0);
+    std::vector<Kikan::DefaultVertex> v(4);
+
+    v[0].position = glm::vec3(-1, 1, 0);
+    v[1].position = glm::vec3(1, 1, 0);
+    v[2].position = glm::vec3(1, -1, 0);
+    v[3].position = glm::vec3(-1, -1, 0);
+
+    v[0].textureCoords = glm::vec2(0, 1);
+    v[1].textureCoords = glm::vec2(1, 1);
+    v[2].textureCoords = glm::vec2(1, 0);
+    v[3].textureCoords = glm::vec2(0, 0);
+
+    std::vector<GLuint> i = {0, 1, 2, 0, 2, 3};
+    _engine->getRenderer()->getBatch(2)->overrideVertices(v, i);
 }
 
 FluidSimulation::~FluidSimulation() {
@@ -217,15 +214,30 @@ void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
 }
 
 void FluidSimulation::postRender(Kikan::Renderer* renderer, double dt) {
-    renderer->getBatch(0)->render();
-    renderer->getBatch(1)->render();
+    if(_vs->getControls()->RENDER_MODE == Controls::RMT::PARTICLES){
+        //Render Particles to Texture
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _p_view_space_2D->get(), 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        renderer->shader(_particleShaderName)->bind();
+        _engine->getRenderer()->shader(_particleShaderName)->uniformM4fv("u_mvp", renderer->mvp);
+        renderer->getBatch(0)->render();
+
+        //Render Particle Texture over frame texture applying alpha threshold
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _view_space_2D->get(), 0);
+        renderer->shader(_particleShaderName2)->bind();
+        _engine->getRenderer()->shader(_particleShaderName2)->uniformM4fv("u_mvp", glm::mat4x4(1.0f));
+        renderer->getBatch(2)->render();
+    }
+    else{
+        renderer->getBatch(1)->render();
+        renderer->shader()->bind();
+    }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     render_dockspace();
 
-    bool show_demo_window = true;
-    ImGui::ShowDemoWindow(&show_demo_window);
+    //bool show_demo_window = true;
+    //ImGui::ShowDemoWindow(&show_demo_window);
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

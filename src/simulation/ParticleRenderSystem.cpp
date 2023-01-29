@@ -11,10 +11,13 @@ ParticleRenderSystem::ParticleRenderSystem(Controls *controls, Constants* consta
 
 void ParticleRenderSystem::update(double dt) {
     Kikan::Timer timer(&_stats->PERFORMANCE["Render Particles"], Kikan::Timer::Precision::MICRO);
+
+    if(_controls->RENDER_MODE != Controls::RMT::PARTICLES)
+        return;
+
     update_vertices();
 }
 
-#define RADIUS 5
 void ParticleRenderSystem::update_vertices() {
     // Gen new Vertices if new Particles were generated
     if(_entities.size() * 4 > _vertices.size()){
@@ -56,10 +59,20 @@ void ParticleRenderSystem::update_vertices() {
 
         glm::vec3 pos = glm::vec3(p->pos.x, p->pos.y, -.5);
 
-        _vertices[4 * i + 0].position = pos + glm::vec3(-RADIUS, RADIUS, 0);
-        _vertices[4 * i + 1].position = pos + glm::vec3(RADIUS, RADIUS, 0);
-        _vertices[4 * i + 2].position = pos + glm::vec3(RADIUS, -RADIUS, 0);
-        _vertices[4 * i + 3].position = pos + glm::vec3(-RADIUS, -RADIUS, 0);
+        _vertices[4 * i + 0].position = pos + glm::vec3(-_constants->RENDER_RADIUS, _constants->RENDER_RADIUS, 0);
+        _vertices[4 * i + 1].position = pos + glm::vec3(_constants->RENDER_RADIUS, _constants->RENDER_RADIUS, 0);
+        _vertices[4 * i + 2].position = pos + glm::vec3(_constants->RENDER_RADIUS, -_constants->RENDER_RADIUS, 0);
+        _vertices[4 * i + 3].position = pos + glm::vec3(-_constants->RENDER_RADIUS, -_constants->RENDER_RADIUS, 0);
+
+        int vx = (int)(p->vel.x * 90.f);
+        int vy = (int)(p->vel.y * 90.f);
+
+        glm::vec2 col = glm::vec2(vx, vy) / 30.f + .5f;
+
+        _vertices[4 * i + 0].color = glm::vec4(col.x, col.y, 1., 1.);
+        _vertices[4 * i + 1].color = glm::vec4(col.x, col.y, 1., 1.);
+        _vertices[4 * i + 2].color = glm::vec4(col.x, col.y, 1., 1.);
+        _vertices[4 * i + 3].color = glm::vec4(col.x, col.y, 1., 1.);
     }
 
     _renderer->getBatch(0)->overrideVertices(_vertices, _indices);

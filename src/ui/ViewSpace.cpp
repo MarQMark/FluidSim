@@ -107,24 +107,26 @@ void ViewSpace::render() {
     if(ImGui::IsWindowFocused())
         _zoom *= 1.f - 0.2f * ImGui::GetIO().MouseWheel;
 
-
     ImVec2 mousePos = ImGui::GetIO().MousePos;
-    if(_controls->BRUSH_MODE == Controls::BMT::M_SPAWN){
-        if (mousePos.x > min.x && mousePos.y > min.y + 20 && mousePos.x < max.x && mousePos.y < max.y - 20)
-        {
-            float f =  (_width / 2.f - padding) / ((float)_mf->getWidth() * _zoom);
-            ImGui::GetWindowDrawList()->AddCircle(mousePos, _controls->PEN_SIZE  * f, ImColor(ImVec4(0.2f, .4f, .8f, .8f)), 64, 2.f);
+    if(!ImGui::IsAnyItemHovered())
+    {
+        if(_controls->BRUSH_MODE == Controls::BMT::M_SPAWN){
+            if (mousePos.x > min.x && mousePos.y > min.y + 20 && mousePos.x < max.x && mousePos.y < max.y - 20)
+            {
+                float f =  (_width / 2.f - padding) / ((float)_mf->getWidth() * _zoom);
+                ImGui::GetWindowDrawList()->AddCircle(mousePos, _controls->PEN_SIZE  * f, ImColor(ImVec4(0.2f, .4f, .8f, .8f)), 64, 2.f);
+            }
         }
-    }
-    else if(_controls->BRUSH_MODE == Controls::BMT::M_ERASE){
-        if (mousePos.x > min.x && mousePos.y > min.y + 20 && mousePos.x < max.x && mousePos.y < max.y - 20)
-        {
-            float f =  (_width / 2.f - padding) / ((float)_mf->getWidth() * _zoom);
-            ImGui::GetWindowDrawList()->AddCircle(mousePos, _controls->ERASER_SIZE  * f, ImColor(ImVec4(1.f, .2f, .2f, .8f)), 64, 2.f);
+        else if(_controls->BRUSH_MODE == Controls::BMT::M_ERASE){
+            if (mousePos.x > min.x && mousePos.y > min.y + 20 && mousePos.x < max.x && mousePos.y < max.y - 20)
+            {
+                float f =  (_width / 2.f - padding) / ((float)_mf->getWidth() * _zoom);
+                ImGui::GetWindowDrawList()->AddCircle(mousePos, _controls->ERASER_SIZE  * f, ImColor(ImVec4(1.f, .2f, .2f, .8f)), 64, 2.f);
+            }
         }
     }
 
-    _controls->MOUSE_IN_SPACE = (mousePos.x > min.x && mousePos.y > min.y + 70 && mousePos.x < max.x && mousePos.y < max.y);
+    _controls->MOUSE_IN_SPACE = (mousePos.x > min.x && mousePos.y > min.y + 70 && mousePos.x < max.x && mousePos.y < max.y && !ImGui::IsAnyItemHovered());
 
     float scale = (float)_mf->getWidth() / (max.x - min.x - padding);
     _controls->MOUSE_X = (mousePos.x - middleX) * scale * _zoom + (float)_mf->getWidth() / 2.f;

@@ -33,10 +33,14 @@ private:
     ParticleRenderSystem* _p_render_system;
     Kikan::Entity* _background;
 
+    std::string _particleShaderName = "particle";
+    std::string _particleShaderName2 = "particle2";
+
     ConstantsEditor* _ce;
     StatsViewer* _sv;
 
     Kikan::Texture2D* _view_space_2D;
+    Kikan::Texture2D* _p_view_space_2D;
     float _view_space_ratio = 1;
     GLuint _fbo{};
     ViewSpace* _vs;

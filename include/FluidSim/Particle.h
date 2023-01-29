@@ -9,7 +9,6 @@ public:
     glm::vec2 pos;
     glm::vec2 ppos;
     glm::vec2 vel;
-    float index;
 };
 
 #endif //FLUIDSIM_PARTICLE_H

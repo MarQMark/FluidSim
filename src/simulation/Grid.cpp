@@ -21,17 +21,7 @@ Grid::~Grid() {
 }
 
 void Grid::moveParticle(Particle* p) {
-    //TODO: Find out faster way
-    //std::vector<Particle*>* old_pos = _grid[grid_pos1D(p->ppos)];
-
-    //if(!old_pos->empty()){
-    //    auto it = std::find(old_pos->begin(), old_pos->end(), p);
-    //    if(it != old_pos->end())
-    //        old_pos->erase(it);
-    //}
-
     unsigned int index = grid_pos1D(p->pos);
-    p->index = index;
     _grid[index]->push_back(p);
 }
 

@@ -8,11 +8,9 @@ struct Constants{
     float P0 = 200;
     float STIFFNESS = 1e-06;
     float STIFFNESS_NEAR = 3e-07;
-    float MAX_PRESS = 1e5;
-    float MAX_D = 10;
     float FRICTION = .002f;
     int COLLISION_RADIUS = 0;
-    float MAX_VEL = 10.f;
+    float RENDER_RADIUS = 5;
 
     unsigned int TEXTURE_ID;
 };

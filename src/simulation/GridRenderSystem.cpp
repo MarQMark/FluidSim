@@ -32,7 +32,7 @@ void GridRenderSystem::setGrid(Grid* grid) {
 
 void GridRenderSystem::update_color() {
     for (int i = 0; i < _cellCount; ++i) {
-        _rps[i] = (float)_grid->cellCount(i) / 5.f;
+        _rps[i] = (float)_grid->cellCount(i) / 10.f;
         _alphas[i] = (float) _grid->cellCount(i) != 0 ? 1 : 0;
     }
 }
@@ -53,10 +53,10 @@ void GridRenderSystem::update_vertices() {
         float abl = (_alphas[i - 1] + _alphas[i] + _alphas[i - _grid->getWidth() - 1] + _alphas[i - _grid->getWidth()]) / 2.f;
         float abr = (_alphas[i] + _alphas[i + 1] + _alphas[i - _grid->getWidth()] + _alphas[i - _grid->getWidth() + 1]) / 2.f;
 
-        _vertices[4 * i + 0].color = glm::vec4(0, 0, 1 - tl, atl);
-        _vertices[4 * i + 1].color = glm::vec4(0, 0, 1 - tr, atr);
-        _vertices[4 * i + 2].color = glm::vec4(0, 0, 1 - br, abr);
-        _vertices[4 * i + 3].color = glm::vec4(0, 0, 1 - bl, abl);
+        _vertices[4 * i + 0].color = glm::vec4(.5 - tl / 2, 0, 1 - tl, atl);
+        _vertices[4 * i + 1].color = glm::vec4(.5 - tr / 2, 0, 1 - tr, atr);
+        _vertices[4 * i + 2].color = glm::vec4(.5 - br / 2, 0, 1 - br, abr);
+        _vertices[4 * i + 3].color = glm::vec4(.5 - bl / 2, 0, 1 - bl, abl);
     }
 }
 
