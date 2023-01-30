@@ -11,6 +11,7 @@ struct Constants{
     float FRICTION = .002f;
     int COLLISION_RADIUS = 0;
     float RENDER_RADIUS = 5;
+    int RENDER_SMOOTHING = 15;
 
     unsigned int TEXTURE_ID;
 };

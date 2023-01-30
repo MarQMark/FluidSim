@@ -1,26 +1,18 @@
 #include "FluidSim/FluidSimulation.h"
 #include <iostream>
-#include <sstream>
 
-#include "Kikan/ecs/components/QuadSprite.h"
 #include "Kikan/ecs/systems/SpriteRenderSystem.h"
 #include "Kikan/ecs/components/Texture2DSprite.h"
 
-#include "../imgui/imgui.h"
 #include "../imgui/imgui_impl_glfw.h"
 #include "../imgui/imgui_impl_opengl3.h"
 
-#include "../file_browser/ImGuiFileBrowser.h"
-
 #include "IconFontAwesome/IconsFontAwesome5.h"
-#include "FluidSim/SpriteRenderSystem.h"
-#include "Kikan/util/Timer.h"
 
 #define TEXTURE_SIZE 512
 #define TEXTURE_SIZE_HALF (TEXTURE_SIZE / 2.f)
 
 #define RESOLUTION 2048
-
 
 Kikan::Entity* createBox(glm::vec2 pos, float w, float h, GLuint txtID){
     auto* box = new Kikan::Entity();
@@ -55,7 +47,7 @@ FluidSimulation::FluidSimulation() {
     _engine->getRenderer()->shader(_particleShaderName)->uniform1li("u_sampler", 0);
 
     _engine->getRenderer()->shader(new Kikan::Shader("shaders/default.vert", "shaders/particle2.frag"), _particleShaderName2);
-    _engine->getRenderer()->shader(_particleShaderName2)->uniform1li("u_sampler", 0);
+    _engine->getRenderer()->shader(_particleShaderName2)->uniform1li("u_particle", 0);
 
     _engine->getRenderer()->addBatch(new Kikan::ManuelBatch(Kikan::VertexRegistry::getLayout<Kikan::DefaultVertex>(), sizeof(Kikan::DefaultVertex)), 0);
     _engine->getRenderer()->addBatch(new Kikan::ManuelBatch(Kikan::VertexRegistry::getLayout<Kikan::DefaultVertex>(), sizeof(Kikan::DefaultVertex)), 1);
@@ -95,7 +87,7 @@ FluidSimulation::FluidSimulation() {
     // Setup Widgets
     glGenFramebuffers(1, &_fbo);
     _view_space_2D = new Kikan::Texture2D(RESOLUTION, RESOLUTION, (float*)nullptr);
-    _p_view_space_2D = new Kikan::Texture2D(RESOLUTION, RESOLUTION, (float*)nullptr);
+    _p_txt_2D = new Kikan::Texture2D(RESOLUTION, RESOLUTION, (float*)nullptr);
     _vs = new ViewSpace(_view_space_2D, _curr_map);
     _ce = new ConstantsEditor();
     _mt = new MapTree(&_maps);
@@ -130,8 +122,7 @@ FluidSimulation::FluidSimulation() {
     _engine->getRenderer()->getBatch(0)->addTexture((int)_particle2D->get(), 0);
     _ce->getConstants()->TEXTURE_ID = _particle2D->get();
 
-
-    _engine->getRenderer()->getBatch(2)->addTexture((int)_p_view_space_2D->get(), 0);
+    _engine->getRenderer()->getBatch(2)->addTexture((int)_p_txt_2D->get(), 0);
     std::vector<Kikan::DefaultVertex> v(4);
 
     v[0].position = glm::vec3(-1, 1, 0);
@@ -216,7 +207,7 @@ void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
 void FluidSimulation::postRender(Kikan::Renderer* renderer, double dt) {
     if(_vs->getControls()->RENDER_MODE == Controls::RMT::PARTICLES){
         //Render Particles to Texture
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _p_view_space_2D->get(), 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _p_txt_2D->get(), 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         renderer->shader(_particleShaderName)->bind();
         _engine->getRenderer()->shader(_particleShaderName)->uniformM4fv("u_mvp", renderer->mvp);
@@ -226,6 +217,8 @@ void FluidSimulation::postRender(Kikan::Renderer* renderer, double dt) {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _view_space_2D->get(), 0);
         renderer->shader(_particleShaderName2)->bind();
         _engine->getRenderer()->shader(_particleShaderName2)->uniformM4fv("u_mvp", glm::mat4x4(1.0f));
+        _engine->getRenderer()->shader(_particleShaderName2)->uniform1lf("u_size", RESOLUTION * _vs->getZoom());
+        _engine->getRenderer()->shader(_particleShaderName2)->uniform1li("u_smoothing", _ce->getConstants()->RENDER_SMOOTHING);
         renderer->getBatch(2)->render();
     }
     else{

@@ -40,8 +40,7 @@ private:
     StatsViewer* _sv;
 
     Kikan::Texture2D* _view_space_2D;
-    Kikan::Texture2D* _p_view_space_2D;
-    float _view_space_ratio = 1;
+    Kikan::Texture2D* _p_txt_2D;
     GLuint _fbo{};
     ViewSpace* _vs;
 

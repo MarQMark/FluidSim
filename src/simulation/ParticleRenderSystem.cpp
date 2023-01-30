@@ -64,10 +64,10 @@ void ParticleRenderSystem::update_vertices() {
         _vertices[4 * i + 2].position = pos + glm::vec3(_constants->RENDER_RADIUS, -_constants->RENDER_RADIUS, 0);
         _vertices[4 * i + 3].position = pos + glm::vec3(-_constants->RENDER_RADIUS, -_constants->RENDER_RADIUS, 0);
 
-        int vx = (int)(p->vel.x * 90.f);
-        int vy = (int)(p->vel.y * 90.f);
+        int vx = (int)(p->vel.x * 60.f);
+        int vy = (int)(p->vel.y * 60.f);
 
-        glm::vec2 col = glm::vec2(vx, vy) / 30.f + .5f;
+        glm::vec2 col = glm::vec2(vx, vy) / 20.f + .5f;
 
         _vertices[4 * i + 0].color = glm::vec4(col.x, col.y, 1., 1.);
         _vertices[4 * i + 1].color = glm::vec4(col.x, col.y, 1., 1.);

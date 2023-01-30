@@ -7,8 +7,8 @@
 namespace Kikan{
     class Texture2D {
     public:
-        Texture2D(GLsizei width, GLsizei height, float data[]);
-        Texture2D(GLsizei width, GLsizei height, unsigned char data[]);
+        Texture2D(GLsizei width, GLsizei height, float data[], GLenum filter = GL_NEAREST);
+        Texture2D(GLsizei width, GLsizei height, unsigned char data[], GLenum filter = GL_NEAREST);
         ~Texture2D();
 
         GLuint get() const;
@@ -16,7 +16,7 @@ namespace Kikan{
         void bind(GLuint slot) const;
         static void unbind();
     private:
-        void gen();
+        void gen(GLenum filter);
 
         GLuint _id;
         GLsizei _width;

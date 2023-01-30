@@ -41,6 +41,9 @@ void ConstantsEditor::render() {
     ss << _constants->RENDER_RADIUS;
     std::string buf11(ss.str());
     ss.str(std::string());
+    ss << _constants->RENDER_SMOOTHING;
+    std::string buf12(ss.str());
+    ss.str(std::string());
     #pragma endregion
 
     #pragma region UI Elements
@@ -60,8 +63,15 @@ void ConstantsEditor::render() {
     ImGui::InputText("##Friction", &buf9, ImGuiInputTextFlags_CharsDecimal);
     ImGui::Text("Collision Radius");
     ImGui::InputText("##Collision Radius", &buf10, ImGuiInputTextFlags_CharsDecimal);
+
+    ImGui::Text("\n");
+    ImGui::Separator();
+    ImGui::Text("\n");
+
     ImGui::Text("Render Radius");
     ImGui::InputText("##Render Radius", &buf11, ImGuiInputTextFlags_CharsDecimal);
+    ImGui::Text("Smoothing < 30!!!");
+    ImGui::InputText("##Smoothing", &buf12, ImGuiInputTextFlags_CharsDecimal);
     #pragma endregion
 
 
@@ -83,6 +93,8 @@ void ConstantsEditor::render() {
         _constants->COLLISION_RADIUS = std::stoi(buf10);
     if(!buf11.empty())
         _constants->RENDER_RADIUS = std::stof(buf11);
+    if(!buf12.empty())
+        _constants->RENDER_SMOOTHING = std::stoi(buf12);
 
 
     ImGui::End();
