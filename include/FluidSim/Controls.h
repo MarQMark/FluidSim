@@ -20,7 +20,7 @@ struct Controls{
 
     bool RESET = false;
     bool PAUSE = false;
-    int RENDER_MODE = RMT::GRID;
+    int RENDER_MODE = RMT::PARTICLES;
     bool REBUILD = false;
     bool POPUP_OPEN = false;
     bool LOADING = false;

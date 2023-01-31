@@ -13,7 +13,10 @@ namespace Kikan{
 
         GLuint get() const;
 
-        void bind(GLuint slot) const;
+        void set(GLsizei width, GLsizei height, float data[]);
+        void set(GLsizei width, GLsizei height, unsigned char data[]);
+
+        void bind(GLuint slot = 0) const;
         static void unbind();
     private:
         void gen(GLenum filter);

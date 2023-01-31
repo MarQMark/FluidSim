@@ -6,10 +6,12 @@
 #include "Kikan/ecs/Scene.h"
 #include "Controls.h"
 #include "Stats.h"
+#include "Kikan/opengl/buffers/Texture2D.h"
 
 class GridRenderSystem : public Kikan::IRenderSystem {
 public:
     explicit GridRenderSystem(Controls* controls, Stats* stats, Kikan::Scene* scene);
+    ~GridRenderSystem() override;
 
     void update(double dt) override;
 
@@ -17,6 +19,8 @@ public:
 private:
     Grid* _grid{};
     uint64_t _cellCount;
+
+    Kikan::Texture2D* _texture;
 
     Stats* _stats;
     Controls* _controls;

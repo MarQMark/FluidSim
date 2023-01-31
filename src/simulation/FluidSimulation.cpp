@@ -42,6 +42,11 @@ FluidSimulation::FluidSimulation() {
     _engine->getRenderer()->shader()->bind();
     _engine->getRenderer()->shader()->uniform1li("u_sampler", 0);
 
+    //grid Shader
+    _engine->getRenderer()->shader(new Kikan::Shader("shaders/default.vert", "shaders/grid.frag"), _gridShaderName);
+    _engine->getRenderer()->shader(_gridShaderName)->uniform1li("u_sampler", 0);
+
+
     //particle Shader
     _engine->getRenderer()->shader(new Kikan::Shader("shaders/default.vert", "shaders/particle.frag"), _particleShaderName);
     _engine->getRenderer()->shader(_particleShaderName)->uniform1li("u_sampler", 0);
@@ -122,21 +127,31 @@ FluidSimulation::FluidSimulation() {
     _engine->getRenderer()->getBatch(0)->addTexture((int)_particle2D->get(), 0);
     _ce->getConstants()->TEXTURE_ID = _particle2D->get();
 
+    // Render Particles from Texture
     _engine->getRenderer()->getBatch(2)->addTexture((int)_p_txt_2D->get(), 0);
     std::vector<Kikan::DefaultVertex> v(4);
-
     v[0].position = glm::vec3(-1, 1, 0);
     v[1].position = glm::vec3(1, 1, 0);
     v[2].position = glm::vec3(1, -1, 0);
     v[3].position = glm::vec3(-1, -1, 0);
-
     v[0].textureCoords = glm::vec2(0, 1);
     v[1].textureCoords = glm::vec2(1, 1);
     v[2].textureCoords = glm::vec2(1, 0);
     v[3].textureCoords = glm::vec2(0, 0);
-
     std::vector<GLuint> i = {0, 1, 2, 0, 2, 3};
     _engine->getRenderer()->getBatch(2)->overrideVertices(v, i);
+
+    // Render Grid from Texture
+    std::vector<Kikan::DefaultVertex> v2(4);
+    v2[0].position = glm::vec3(0, _curr_map->getHeight(), 0);
+    v2[1].position = glm::vec3(_curr_map->getWidth(), _curr_map->getHeight(), 0);
+    v2[2].position = glm::vec3(_curr_map->getWidth(), 0, 0);
+    v2[3].position = glm::vec3(0, 0, 0);
+    v2[0].textureCoords = glm::vec2(0, 1);
+    v2[1].textureCoords = glm::vec2(1, 1);
+    v2[2].textureCoords = glm::vec2(1, 0);
+    v2[3].textureCoords = glm::vec2(0, 0);
+    _engine->getRenderer()->getBatch(1)->overrideVertices(v2, i);
 }
 
 FluidSimulation::~FluidSimulation() {
@@ -168,12 +183,10 @@ void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
 
     // Set camera
     _engine->getScene()->camera()->reset();
-    float ratio = ((float)_vs->getWidth() / (float)_vs->getHeight());
-    ratio = 1;
     if(_curr_map->getHeight() > _curr_map->getWidth())
-        _engine->getScene()->camera()->scale(1 / ((float)_curr_map->getHeight() * _vs->getZoom() / 2.f * ratio), 1 / ((float)_curr_map->getHeight() * _vs->getZoom() / 2.f ));
+        _engine->getScene()->camera()->scale(1 / ((float)_curr_map->getHeight() * _vs->getZoom() / 2.f), 1 / ((float)_curr_map->getHeight() * _vs->getZoom() / 2.f ));
     else
-        _engine->getScene()->camera()->scale(1 / ((float)_curr_map->getWidth() * _vs->getZoom() / 2.f * ratio), 1 / ((float)_curr_map->getWidth() * _vs->getZoom() / 2.f ));
+        _engine->getScene()->camera()->scale(1 / ((float)_curr_map->getWidth() * _vs->getZoom() / 2.f), 1 / ((float)_curr_map->getWidth() * _vs->getZoom() / 2.f ));
     _engine->getScene()->camera()->translate(-(float)_curr_map->getWidth() / 2, -(float)_curr_map->getHeight() / 2);
 
     // Load different map
@@ -189,6 +202,18 @@ void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
         sprite->points[2] = sprite->points[0] + glm::vec2(_curr_map->getWidth(), -_curr_map->getHeight());
         sprite->points[3] = sprite->points[0] + glm::vec2(0, -_curr_map->getHeight());
         sprite->textureID = _curr_map->getTexture()->get();
+
+        std::vector<Kikan::DefaultVertex> v(4);
+        v[0].position = glm::vec3(0, _curr_map->getHeight(), 0);
+        v[1].position = glm::vec3(_curr_map->getWidth(), _curr_map->getHeight(), 0);
+        v[2].position = glm::vec3(_curr_map->getWidth(), 0, 0);
+        v[3].position = glm::vec3(0, 0, 0);
+        std::vector<GLuint> i = {0, 1, 2, 0, 2, 3};
+        v[0].textureCoords = glm::vec2(0, 1);
+        v[1].textureCoords = glm::vec2(1, 1);
+        v[2].textureCoords = glm::vec2(1, 0);
+        v[3].textureCoords = glm::vec2(0, 0);
+        _engine->getRenderer()->getBatch(1)->overrideVertices(v, i);
     }
 
     //update FPS STAT
@@ -210,20 +235,34 @@ void FluidSimulation::postRender(Kikan::Renderer* renderer, double dt) {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _p_txt_2D->get(), 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         renderer->shader(_particleShaderName)->bind();
-        _engine->getRenderer()->shader(_particleShaderName)->uniformM4fv("u_mvp", renderer->mvp);
+        renderer->shader(_particleShaderName)->uniformM4fv("u_mvp", renderer->mvp);
         renderer->getBatch(0)->render();
 
         //Render Particle Texture over frame texture applying alpha threshold
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _view_space_2D->get(), 0);
         renderer->shader(_particleShaderName2)->bind();
-        _engine->getRenderer()->shader(_particleShaderName2)->uniformM4fv("u_mvp", glm::mat4x4(1.0f));
-        _engine->getRenderer()->shader(_particleShaderName2)->uniform1lf("u_size", RESOLUTION * _vs->getZoom());
-        _engine->getRenderer()->shader(_particleShaderName2)->uniform1li("u_smoothing", _ce->getConstants()->RENDER_SMOOTHING);
+        renderer->shader(_particleShaderName2)->uniformM4fv("u_mvp", glm::mat4x4(1.0f));
+        renderer->shader(_particleShaderName2)->uniform1lf("u_size", RESOLUTION * _vs->getZoom());
+        renderer->shader(_particleShaderName2)->uniform1li("u_smoothing", _ce->getConstants()->RENDER_SMOOTHING);
         renderer->getBatch(2)->render();
     }
     else{
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _p_txt_2D->get(), 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        renderer->shader(_gridShaderName)->bind();
+        renderer->shader(_gridShaderName)->uniformM4fv("u_mvp", renderer->mvp);
+        renderer->shader(_gridShaderName)->uniform1lf("u_zoom",  _vs->getZoom());
+        renderer->shader(_gridShaderName)->uniform2fv("u_cell_count",  glm::vec2(_sim_system->getGrid()->getWidth(), _sim_system->getGrid()->getHeight()));
+        renderer->shader(_gridShaderName)->uniform2fv("u_resolution",  glm::vec2(RESOLUTION, RESOLUTION));
         renderer->getBatch(1)->render();
-        renderer->shader()->bind();
+
+        //Render Particle Texture over frame texture for smoothing
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _view_space_2D->get(), 0);
+        renderer->shader(_particleShaderName2)->bind();
+        renderer->shader(_particleShaderName2)->uniformM4fv("u_mvp", glm::mat4x4(1.0f));
+        renderer->shader(_particleShaderName2)->uniform1lf("u_size", RESOLUTION * _vs->getZoom());
+        renderer->shader(_particleShaderName2)->uniform1li("u_smoothing", _ce->getConstants()->RENDER_SMOOTHING);
+        renderer->getBatch(2)->render();
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

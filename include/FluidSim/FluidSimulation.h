@@ -35,6 +35,7 @@ private:
 
     std::string _particleShaderName = "particle";
     std::string _particleShaderName2 = "particle2";
+    std::string _gridShaderName = "grid";
 
     ConstantsEditor* _ce;
     StatsViewer* _sv;
