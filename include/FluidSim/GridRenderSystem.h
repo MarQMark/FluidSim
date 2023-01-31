@@ -10,7 +10,7 @@
 
 class GridRenderSystem : public Kikan::IRenderSystem {
 public:
-    explicit GridRenderSystem(Controls* controls, Stats* stats, Kikan::Scene* scene);
+    explicit GridRenderSystem(Controls* controls, Stats* stats);
     ~GridRenderSystem() override;
 
     void update(double dt) override;
@@ -18,23 +18,15 @@ public:
     void setGrid(Grid* grid);
 private:
     Grid* _grid{};
-    uint64_t _cellCount;
+    uint64_t _cellCount = 0;
 
     Kikan::Texture2D* _texture;
 
     Stats* _stats;
     Controls* _controls;
-    Kikan::Scene* _scene;
-
-    std::vector<float> _rps; // Relative particle count grid
-    std::vector<float> _alphas;
 
     std::vector<Kikan::DefaultVertex> _vertices;
     std::vector<GLuint> _indices;
-
-    void update_color();
-    void update_vertices();
-    void gen_render_data();
 };
 
 #endif //FLUIDSIM_RENDER_SYSTEM_H

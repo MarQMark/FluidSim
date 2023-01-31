@@ -101,7 +101,7 @@ FluidSimulation::FluidSimulation() {
 
     // Engine Stuff
     _engine->getScene()->addSystem(new Kikan::SpriteRenderSystem());
-    _g_render_system = new GridRenderSystem(_vs->getControls(), _sv->getStats(), _engine->getScene());
+    _g_render_system = new GridRenderSystem(_vs->getControls(), _sv->getStats());
     _engine->getScene()->addSystem(_g_render_system);
     _p_render_system = new ParticleRenderSystem(_vs->getControls(), _ce->getConstants(), _sv->getStats());
     _engine->getScene()->addSystem(_p_render_system);
