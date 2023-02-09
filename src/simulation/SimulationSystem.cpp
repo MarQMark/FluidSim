@@ -9,13 +9,23 @@ SimulationSystem::SimulationSystem(DistanceField* distanceField, Constants* cons
 
     _grid = new Grid(glm::vec2(0,0), _distanceField->getWidth() / _constants->RADIUS, _distanceField->getHeight() / _constants->RADIUS, _constants->RADIUS);
     _rs->setGrid(_grid);
+
+    _thread_count = std::thread::hardware_concurrency() - 1; // Max # of threads the system supports
+    _thread_count = 3;
+    _threads.resize(_thread_count);
+    _sync_id.resize(_thread_count);
+    for (uint32_t i = 0; i < _thread_count; i++) {
+        _threads.at(i) = std::thread(&SimulationSystem::run, this, i);
+        _sync_id.at(i) = false;
+    }
 }
 
 SimulationSystem::~SimulationSystem() {
+    _running = false;
     delete _grid;
 }
 
-Kikan::Entity* createParticle2(glm::vec2 pos, float w, float h, GLuint txtID){
+Kikan::Entity* createParticle(glm::vec2 pos, float w, float h, GLuint txtID){
     auto* entity = new Kikan::Entity();
 
     auto* particle = new Particle();
@@ -28,7 +38,45 @@ Kikan::Entity* createParticle2(glm::vec2 pos, float w, float h, GLuint txtID){
 }
 
 
+void SimulationSystem::run(int id) {
+    while(_running){
+
+        _mut.lock();
+        if(!_sync_id[id]) {
+            std::this_thread::sleep_for(std::chrono::nanoseconds(10));
+            _mut.unlock();
+            continue;
+        }
+        _mut.unlock();
+
+        float dtf = 33.3333f;
+
+        apply_external_forces(dtf, id);
+
+        _neighbor_mut.lock();
+        apply_viscosity(dtf, id);
+        _neighbor_mut.unlock();
+
+        advance_particles(dtf, id);
+
+        _grid_mut.lock();
+            update_neighbours(id);
+        _grid_mut.unlock();
+
+        double_density_relaxation(dtf, id);
+        resolve_collisions(dtf, id);
+        update_velocity(dtf, id);
+
+        _mut.lock();
+        _sync++;
+        _mut.unlock();
+
+        _sync_id[id] = false;
+    }
+}
+
 void SimulationSystem::update(double dt) {
+
     dt = 33.3333;
     auto dtf = (float) dt;
 
@@ -37,13 +85,20 @@ void SimulationSystem::update(double dt) {
     if(_controls->PAUSE || _controls->LOADING)
         return;
 
-    apply_external_forces(dtf);
-    apply_viscosity(dtf);
-    advance_particles(dtf);
-    update_neighbours();
-    double_density_relaxation(dtf);
-    resolve_collisions(dtf);
-    update_velocity(dtf);
+    {
+        Kikan::Timer timer(&_stats->PERFORMANCE["Update Particles"], Kikan::Timer::Precision::MICRO);
+
+        _sync = 0;
+        _mut.lock();
+        for (auto && i : _sync_id)
+            i = true;
+        _mut.unlock();
+
+        while(_sync != _thread_count){
+            std::this_thread::sleep_for(std::chrono::nanoseconds(10));
+        }
+    }
+
     update_stats();
 }
 
@@ -67,7 +122,7 @@ void SimulationSystem::apply_controls(float dt) {
                     for (float x = -penSizeH; x <= penSizeH; x += (float)_constants->RADIUS) {
                         for (float y = -penSizeH; y <= penSizeH; y += (float)_constants->RADIUS) {
                             if(glm::length(glm::vec2(x, y)) < penSizeH)
-                                _scene->addEntity(createParticle2(glm::vec2(_controls->MOUSE_X + x, _controls->MOUSE_Y + y), 10, 10, _constants->TEXTURE_ID));
+                                _scene->addEntity(createParticle(glm::vec2(_controls->MOUSE_X + x, _controls->MOUSE_Y + y), 10, 10, _constants->TEXTURE_ID));
                         }
                     }
                 }
@@ -117,11 +172,9 @@ void SimulationSystem::apply_controls(float dt) {
 #pragma clang diagnostic pop
 
 
-void SimulationSystem::apply_external_forces(float dt) {
-    Kikan::Timer timer(&_stats->PERFORMANCE["Apply External Forces"], Kikan::Timer::Precision::MICRO);
-
-    for (Kikan::Entity* entity : _entities) {
-        auto* p = entity->getComponent<Particle>();
+void SimulationSystem::apply_external_forces(float dt, int id) {
+    for (unsigned int i = id; i < _entities.size(); i += _thread_count) {
+        auto* p = _entities[i]->getComponent<Particle>();
         p->vel += glm::vec2(0, -.05) * dt / 1000.f; // Gravity
 
         if(_extern_force){
@@ -134,11 +187,9 @@ void SimulationSystem::apply_external_forces(float dt) {
     }
 }
 
-void SimulationSystem::apply_viscosity(float dt) {
-    Kikan::Timer timer(&_stats->PERFORMANCE["Apply Viscosity"], Kikan::Timer::Precision::MICRO);
-
-    for (auto* entity : _entities) {
-        auto* p = entity->getComponent<Particle>();
+void SimulationSystem::apply_viscosity(float dt, int id) {
+    for (unsigned int i = id; i < _entities.size(); i += _thread_count) {
+        auto* p = _entities[i]->getComponent<Particle>();
         for (auto* n : _p_neighbours[p]) {
             if(p->pos == n->pos)
                 n->pos += glm::vec2 (1);
@@ -156,44 +207,43 @@ void SimulationSystem::apply_viscosity(float dt) {
     }
 }
 
-void SimulationSystem::advance_particles(float dt) {
-    Kikan::Timer timer(&_stats->PERFORMANCE["Advance Particles"], Kikan::Timer::Precision::MICRO);
-
+void SimulationSystem::advance_particles(float dt, int id) {
     _grid->clear();
-    for (auto* entity : _entities) {
-        auto* p = entity->getComponent<Particle>();
+    for (unsigned int i = id; i < _entities.size(); i += _thread_count) {
+        auto* p = _entities[i]->getComponent<Particle>();
         p->ppos = p->pos;
         p->pos += dt * p->vel;
 
         limit_pos(p);
 
+        _grid_mut.lock();
         _grid->moveParticle(p);
+        _grid_mut.unlock();
     }
 }
 
-void SimulationSystem::update_neighbours() {
-    Kikan::Timer timer(&_stats->PERFORMANCE["Update Neighbors"], Kikan::Timer::Precision::MICRO);
-
-    for (auto* entity : _entities) {
-        auto* p = entity->getComponent<Particle>();
+void SimulationSystem::update_neighbours(int id) {
+    for (unsigned int i = id; i < _entities.size(); i += _thread_count) {
+        auto* p = _entities[i]->getComponent<Particle>();
 
         _p_neighbours[p].clear();
         _grid->possibleNeighbours(_p_neighbours[p], p);
     }
 }
 
-void SimulationSystem::double_density_relaxation(float dt) {
-    Kikan::Timer timer(&_stats->PERFORMANCE["Double Density Relaxation"], Kikan::Timer::Precision::MICRO);
-
-    for (auto* entity : _entities) {
-        auto *i = entity->getComponent<Particle>();
+void SimulationSystem::double_density_relaxation(float dt, int id) {
+    for (unsigned int n = id; n < _entities.size(); n += _thread_count) {
+        auto *i = _entities[n]->getComponent<Particle>();
 
         glm::vec2 p = glm::vec2(0);
         glm::vec2 p_near = glm::vec2(0);
 
         for (Particle* j : _p_neighbours[i]) {
-            if(i->pos == j->pos)
-                j->pos += glm::vec2 (1);
+            if(i->pos == j->pos){
+                _neighbor_mut.lock();
+                j->pos += glm::vec2 (0.01);
+                _neighbor_mut.unlock();
+            }
 
             glm::vec2 q = (i->pos - j->pos) / _constants->RADIUS;
             if(glm::length(q) < 1.f){
@@ -207,13 +257,21 @@ void SimulationSystem::double_density_relaxation(float dt) {
 
         glm::vec2 dx = glm::vec2(0);
         for (Particle* j : _p_neighbours[i]) {
-            if(i->pos == j->pos)
+
+            if(i->pos == j->pos){
+                _neighbor_mut.lock();
                 j->pos += glm::vec2 (0.01);
+                _neighbor_mut.unlock();
+            }
 
             glm::vec2 q = (i->pos - j->pos) / _constants->RADIUS;
             if(glm::length(q) < 1.f){
                 glm::vec2 D = dt * dt * (P * (1.f - q) + P_near * (1.f - q) * (1.f - q)) * glm::normalize(i->pos - j->pos);
+
+                _neighbor_mut.lock();
                 j->pos += 0.5f * D;
+                _neighbor_mut.unlock();
+
                 dx -= 0.5f * D;
             }
         }
@@ -222,16 +280,9 @@ void SimulationSystem::double_density_relaxation(float dt) {
     }
 }
 
-void SimulationSystem::resolve_collisions(float dt) {
-    Kikan::Timer timer(&_stats->PERFORMANCE["Resolve Collision"], Kikan::Timer::Precision::MICRO);
-
-    for (auto* entity : _entities) {
-        auto *p = entity->getComponent<Particle>();
-
-        //p->pos.x = std::max(p->pos.x, 0.f);
-        //p->pos.y = std::max(p->pos.y, 0.f);
-        //p->pos.x = std::min(p->pos.x, 200.f);
-        //p->pos.y = std::min(p->pos.y, 200.f);
+void SimulationSystem::resolve_collisions(float dt, int id) {
+    for (unsigned int i = id; i < _entities.size(); i += _thread_count) {
+        auto *p = _entities[i]->getComponent<Particle>();
 
         int dist = _distanceField->distance(p->pos);
         if(dist > -_constants->COLLISION_RADIUS){
@@ -247,11 +298,9 @@ void SimulationSystem::resolve_collisions(float dt) {
     }
 }
 
-void SimulationSystem::update_velocity(float dt) {
-    Kikan::Timer timer(&_stats->PERFORMANCE["Update Velocity"], Kikan::Timer::Precision::MICRO);
-
-    for (auto* entity : _entities) {
-        auto *p = entity->getComponent<Particle>();
+void SimulationSystem::update_velocity(float dt, int id) {
+    for (unsigned int i = id; i < _entities.size(); i += _thread_count) {
+        auto *p = _entities[i]->getComponent<Particle>();
         p->vel = (p->pos - p->ppos) / dt;
     }
 }
@@ -284,3 +333,4 @@ void SimulationSystem::limit_pos(Particle* p){
     p->pos.x = std::min(std::max(p->pos.x, 2 * _constants->RADIUS), (float)_distanceField->getWidth() - 2 * _constants->RADIUS);
     p->pos.y = std::min(std::max(p->pos.y, 2 * _constants->RADIUS), (float)_distanceField->getHeight() - 2 * _constants->RADIUS);
 }
+

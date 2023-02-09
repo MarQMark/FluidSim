@@ -10,6 +10,8 @@
 #include "Controls.h"
 #include "GridRenderSystem.h"
 #include <map>
+#include <thread>
+#include <mutex>
 
 class SimulationSystem : public Kikan::ISystem{
 public:
@@ -22,6 +24,15 @@ public:
 
     Grid* getGrid();
 private:
+    std::vector<std::thread> _threads;
+    std::vector<bool> _sync_id;
+    unsigned int _thread_count;
+    bool _running = true;
+    std::mutex _mut;
+    std::mutex _grid_mut;
+    std::mutex _neighbor_mut;
+    int _sync = -1;
+
     Grid* _grid;
     DistanceField* _distanceField;
     std::map<Particle*, std::vector<Particle*>> _p_neighbours;
@@ -36,14 +47,17 @@ private:
     Kikan::Scene* _scene;
     GridRenderSystem* _rs;
 
+    void run(int id);
+
     void apply_controls(float dt);
-    void apply_external_forces(float dt);
-    void apply_viscosity(float dt);
-    void advance_particles(float dt);
-    void update_neighbours();
-    void double_density_relaxation(float dt);
-    void resolve_collisions(float dt);
-    void update_velocity(float dt);
+
+    void apply_external_forces(float dt, int id);
+    void apply_viscosity(float dt, int id);
+    void advance_particles(float dt, int id);
+    void update_neighbours(int id);
+    void double_density_relaxation(float dt, int id);
+    void resolve_collisions(float dt, int id);
+    void update_velocity(float dt, int id);
 
     void update_stats();
 
