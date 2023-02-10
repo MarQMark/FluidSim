@@ -22,6 +22,12 @@ You can use Images in order to create custom maps
 </p>
 
 # <p>Screenshots</p>
+![BoxIdle](https://user-images.githubusercontent.com/72945679/218122916-c64c1c54-07f2-472d-b695-b9f299cd350b.png)
+![BoxFlow](https://user-images.githubusercontent.com/72945679/218122854-d03d206f-a6de-4314-ba44-21ec9e318f92.png)
+![Tube](https://user-images.githubusercontent.com/72945679/218122958-750262d8-d8e4-4b4a-8d1c-0983a238fc0d.png)
+![slope](https://user-images.githubusercontent.com/72945679/218122976-be7b6e75-9116-4fd5-a504-b1382f234736.png)
+![BoxGrid](https://user-images.githubusercontent.com/72945679/218123009-57d061c2-b5fb-4e42-b735-7bede2c3b27c.png)
+
 
 # <p>Notes</p>
 <p>
