@@ -3,7 +3,7 @@
 # <p>Description</p>
 
 <p>
-This is a fluid Simulation based on: <br> <i>Simon Clavet, Philippe Beaudoin, and Pierre Poulin. Particle-based viscoelastic fuid simulation. In Proceedings of the 2005 ACM SIGGRAPH/Eurographics symposium on Computer animation, pages 219-228. ACM, 2005.</i>
+This is a fluid Simulation based on: <br> <i>Simon Clavet, Philippe Beaudoin, and Pierre Poulin. Particle-based viscoelastic fuid simulation. In Proceedings of the 2005 ACM SIGGRAPH/Eurographics symposium on Computer animation, 2005.</i>
 <br>It is implemented using C++ 11 and rendered with OpenGL 4.3.
 </p>
 
