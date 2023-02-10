@@ -10,11 +10,14 @@ public:
     explicit MapFile(const std::string& path, float* progress = nullptr, std::string* progress_msg = nullptr);
     ~MapFile();
 
+    Kikan::Texture2D* getIcon();
     Kikan::Texture2D* getTexture();
+    Kikan::Texture2D* getForeground();
     DistanceField* getDistanceField();
 
     int getWidth() const;
     int getHeight() const;
+
     std::string getName();
 
 private:
@@ -23,7 +26,9 @@ private:
 
     std::string _name;
 
+    Kikan::Texture2D* _icon;
     Kikan::Texture2D* _txt;
+    Kikan::Texture2D* _fg = nullptr;
 
     DistanceField* _df;
 };

@@ -1,6 +1,5 @@
 #include <iostream>
 #include "FluidSim/SimulationSystem.h"
-#include "Kikan/ecs/components/Texture2DSprite.h"
 #include "Kikan/util/Timer.h"
 
 SimulationSystem::SimulationSystem(DistanceField* distanceField, Constants* constants, Controls* controls, Stats* stats, Kikan::Scene* scene, GridRenderSystem* rs)
@@ -14,19 +13,6 @@ SimulationSystem::SimulationSystem(DistanceField* distanceField, Constants* cons
 SimulationSystem::~SimulationSystem() {
     delete _grid;
 }
-
-Kikan::Entity* createParticle2(glm::vec2 pos, float w, float h, GLuint txtID){
-    auto* entity = new Kikan::Entity();
-
-    auto* particle = new Particle();
-    particle->pos = pos;
-    particle->ppos = pos;
-    particle->vel = glm::vec2(0,0);
-    entity->addComponent(particle);
-
-    return entity;
-}
-
 
 void SimulationSystem::update(double dt) {
     dt = 33.3333;
@@ -66,8 +52,16 @@ void SimulationSystem::apply_controls(float dt) {
                     float penSizeH = _controls->PEN_SIZE / 2.f;
                     for (float x = -penSizeH; x <= penSizeH; x += (float)_constants->RADIUS) {
                         for (float y = -penSizeH; y <= penSizeH; y += (float)_constants->RADIUS) {
-                            if(glm::length(glm::vec2(x, y)) < penSizeH)
-                                _scene->addEntity(createParticle2(glm::vec2(_controls->MOUSE_X + x, _controls->MOUSE_Y + y), 10, 10, _constants->TEXTURE_ID));
+                            if(glm::length(glm::vec2(x, y)) < penSizeH){
+                                glm::vec2 pos = glm::vec2(_controls->MOUSE_X + x, _controls->MOUSE_Y + y);
+                                auto* entity = new Kikan::Entity();
+                                auto* particle = new Particle();
+                                particle->pos = pos;
+                                particle->ppos = pos;
+                                particle->vel = glm::vec2(0,0);
+                                entity->addComponent(particle);
+                                _scene->addEntity(entity);
+                            }
                         }
                     }
                 }

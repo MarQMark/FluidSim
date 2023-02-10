@@ -14,19 +14,6 @@
 
 #define RESOLUTION 2048
 
-Kikan::Entity* createBox(glm::vec2 pos, float w, float h, GLuint txtID){
-    auto* box = new Kikan::Entity();
-    auto* sprite = new Kikan::Texture2DSprite();
-    sprite->points[0] = pos;
-    sprite->points[1] = pos + glm::vec2(w, 0);
-    sprite->points[2] = pos + glm::vec2(w, -h);
-    sprite->points[3] = pos + glm::vec2(0, -h);
-    sprite->textureID = txtID;
-    sprite->layer = -.5;
-    box->addComponent(sprite);
-    return box;
-}
-
 FluidSimulation::FluidSimulation() {
 
     //Setup Engine
@@ -57,6 +44,7 @@ FluidSimulation::FluidSimulation() {
     _engine->getRenderer()->addBatch(new Kikan::ManuelBatch(Kikan::VertexRegistry::getLayout<Kikan::DefaultVertex>(), sizeof(Kikan::DefaultVertex)), 0);
     _engine->getRenderer()->addBatch(new Kikan::ManuelBatch(Kikan::VertexRegistry::getLayout<Kikan::DefaultVertex>(), sizeof(Kikan::DefaultVertex)), 1);
     _engine->getRenderer()->addBatch(new Kikan::ManuelBatch(Kikan::VertexRegistry::getLayout<Kikan::DefaultVertex>(), sizeof(Kikan::DefaultVertex)), 2);
+    _engine->getRenderer()->addBatch(new Kikan::ManuelBatch(Kikan::VertexRegistry::getLayout<Kikan::DefaultVertex>(), sizeof(Kikan::DefaultVertex)), 3);
 
 
     // Setup ImGUI
@@ -80,9 +68,9 @@ FluidSimulation::FluidSimulation() {
 
 
     // Load maps
-    _maps.push_back(new MapFile("assets/box.png"));
-    _maps.push_back(new MapFile("assets/tube.png"));
-    _maps.push_back(new MapFile("assets/slope.png"));
+    _maps.push_back(new MapFile("assets/box"));
+    _maps.push_back(new MapFile("assets/tube"));
+    _maps.push_back(new MapFile("assets/slope"));
     _curr_map = _maps[0];
     _engine->getRenderer()->shader()->bind();
     _engine->getRenderer()->shader()->uniform1lf("u_pTexture", (float)_maps.size() + 2);
@@ -109,10 +97,6 @@ FluidSimulation::FluidSimulation() {
     _engine->getScene()->addSystem(_sim_system);
 
 
-    _background = createBox(glm::vec2(0, (float)_curr_map->getHeight()), (float)_curr_map->getWidth(), (float)_curr_map->getHeight(), _curr_map->getTexture()->get());
-    _engine->getScene()->addEntity(_background);
-
-
     //create Texture
     std::vector<float> data(TEXTURE_SIZE * TEXTURE_SIZE * 4);
     for (int x = 0; x < TEXTURE_SIZE; ++x) {
@@ -127,31 +111,30 @@ FluidSimulation::FluidSimulation() {
     _engine->getRenderer()->getBatch(0)->addTexture((int)_particle2D->get(), 0);
     _ce->getConstants()->TEXTURE_ID = _particle2D->get();
 
-    // Render Particles from Texture
-    _engine->getRenderer()->getBatch(2)->addTexture((int)_p_txt_2D->get(), 0);
+    std::vector<GLuint> i = {0, 1, 2, 0, 2, 3};
     std::vector<Kikan::DefaultVertex> v(4);
-    v[0].position = glm::vec3(-1, 1, 0);
-    v[1].position = glm::vec3(1, 1, 0);
-    v[2].position = glm::vec3(1, -1, 0);
-    v[3].position = glm::vec3(-1, -1, 0);
     v[0].textureCoords = glm::vec2(0, 1);
     v[1].textureCoords = glm::vec2(1, 1);
     v[2].textureCoords = glm::vec2(1, 0);
     v[3].textureCoords = glm::vec2(0, 0);
-    std::vector<GLuint> i = {0, 1, 2, 0, 2, 3};
+
+    // Render Particles from Texture
+    _engine->getRenderer()->getBatch(2)->addTexture((int)_p_txt_2D->get(), 0);
+    v[0].position = glm::vec3(-1, 1, 0);
+    v[1].position = glm::vec3(1, 1, 0);
+    v[2].position = glm::vec3(1, -1, 0);
+    v[3].position = glm::vec3(-1, -1, 0);
     _engine->getRenderer()->getBatch(2)->overrideVertices(v, i);
 
     // Render Grid from Texture
-    std::vector<Kikan::DefaultVertex> v2(4);
-    v2[0].position = glm::vec3(0, _curr_map->getHeight(), 0);
-    v2[1].position = glm::vec3(_curr_map->getWidth(), _curr_map->getHeight(), 0);
-    v2[2].position = glm::vec3(_curr_map->getWidth(), 0, 0);
-    v2[3].position = glm::vec3(0, 0, 0);
-    v2[0].textureCoords = glm::vec2(0, 1);
-    v2[1].textureCoords = glm::vec2(1, 1);
-    v2[2].textureCoords = glm::vec2(1, 0);
-    v2[3].textureCoords = glm::vec2(0, 0);
-    _engine->getRenderer()->getBatch(1)->overrideVertices(v2, i);
+    v[0].position = glm::vec3(0, _curr_map->getHeight(), 0);
+    v[1].position = glm::vec3(_curr_map->getWidth(), _curr_map->getHeight(), 0);
+    v[2].position = glm::vec3(_curr_map->getWidth(), 0, 0);
+    v[3].position = glm::vec3(0, 0, 0);
+    _engine->getRenderer()->getBatch(1)->overrideVertices(v, i);
+    // Foreground Batch
+    _engine->getRenderer()->getBatch(3)->overrideVertices(v, i);
+
 }
 
 FluidSimulation::~FluidSimulation() {
@@ -196,13 +179,6 @@ void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
         _vs->setMapFile(_curr_map);
         _sim_system->setDistanceField(_curr_map->getDistanceField());
 
-        auto* sprite = _background->getComponent<Kikan::Texture2DSprite>();
-        sprite->points[0] = glm::vec2(0, _curr_map->getHeight());
-        sprite->points[1] = sprite->points[0] + glm::vec2(_curr_map->getWidth(), 0);
-        sprite->points[2] = sprite->points[0] + glm::vec2(_curr_map->getWidth(), -_curr_map->getHeight());
-        sprite->points[3] = sprite->points[0] + glm::vec2(0, -_curr_map->getHeight());
-        sprite->textureID = _curr_map->getTexture()->get();
-
         std::vector<Kikan::DefaultVertex> v(4);
         v[0].position = glm::vec3(0, _curr_map->getHeight(), 0);
         v[1].position = glm::vec3(_curr_map->getWidth(), _curr_map->getHeight(), 0);
@@ -214,6 +190,7 @@ void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
         v[2].textureCoords = glm::vec2(1, 0);
         v[3].textureCoords = glm::vec2(0, 0);
         _engine->getRenderer()->getBatch(1)->overrideVertices(v, i);
+        _engine->getRenderer()->getBatch(3)->overrideVertices(v, i);
     }
 
     //update FPS STAT
@@ -230,6 +207,12 @@ void FluidSimulation::preRender(Kikan::Renderer* renderer, double dt) {
 }
 
 void FluidSimulation::postRender(Kikan::Renderer* renderer, double dt) {
+    // Render background
+    renderer->shader()->bind();
+    renderer->shader()->uniformM4fv("u_mvp", renderer->mvp);
+    renderer->getBatch(3)->addTexture((int)_curr_map->getTexture()->get(), 0);
+    renderer->getBatch(3)->render();
+
     if(_vs->getControls()->RENDER_MODE == Controls::RMT::PARTICLES){
         //Render Particles to Texture
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _p_txt_2D->get(), 0);
@@ -263,6 +246,13 @@ void FluidSimulation::postRender(Kikan::Renderer* renderer, double dt) {
         renderer->shader(_particleShaderName2)->uniform1lf("u_size", RESOLUTION * _vs->getZoom());
         renderer->shader(_particleShaderName2)->uniform1li("u_smoothing", _ce->getConstants()->RENDER_SMOOTHING);
         renderer->getBatch(2)->render();
+    }
+
+    if(_curr_map->getForeground()){
+        renderer->shader()->bind();
+        renderer->shader()->uniformM4fv("u_mvp", renderer->mvp);
+        renderer->getBatch(3)->addTexture((int)_curr_map->getForeground()->get(), 0);
+        renderer->getBatch(3)->render();
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -346,8 +336,11 @@ void FluidSimulation::render_ui() {
 
     if(open)
         ImGui::OpenPopup("Load Map");
-    if(_fileBrowser.showFileDialog("Load Map", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(ImGui::GetWindowWidth() * .75f, ImGui::GetWindowHeight() * .75f), ".png"))
-        _maps.push_back(new MapFile(_fileBrowser.selected_path, &_loading, &_loading_msg));
+    if(_fileBrowser.showFileDialog("Load Map", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(ImGui::GetWindowWidth() * .75f, ImGui::GetWindowHeight() * .75f), ".png")){
+        std::string path = _fileBrowser.selected_path;
+        path.erase(path.end() - 4, path.end());
+        _maps.push_back(new MapFile(path, &_loading, &_loading_msg));
+    }
     _vs->getControls()->POPUP_OPEN = ImGui::IsPopupOpen("Load Map");
 
     _vs->render();

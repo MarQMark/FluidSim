@@ -31,7 +31,6 @@ private:
     SimulationSystem* _sim_system;
     GridRenderSystem* _g_render_system;
     ParticleRenderSystem* _p_render_system;
-    Kikan::Entity* _background;
 
     std::string _particleShaderName = "particle";
     std::string _particleShaderName2 = "particle2";

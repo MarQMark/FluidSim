@@ -9,7 +9,7 @@ struct Constants{
     float STIFFNESS = 1e-06;
     float STIFFNESS_NEAR = 3e-07;
     float FRICTION = .002f;
-    int COLLISION_RADIUS = 0;
+    int COLLISION_RADIUS = 3;
     float RENDER_RADIUS = 5;
     int RENDER_SMOOTHING = 15;
 

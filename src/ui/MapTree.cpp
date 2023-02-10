@@ -10,9 +10,9 @@ void MapTree::render() {
     for (auto* map : *_maps) {
         if(ImGui::TreeNode(map->getName().c_str())){
 
-            auto my_tex_id = reinterpret_cast<void*>(map->getTexture()->get());
-            float my_tex_w = ImGui::GetWindowHeight() / 10.f * ((float)map->getWidth() / (float)map->getHeight());
-            float my_tex_h = ImGui::GetWindowHeight() / 10.f;
+            auto my_tex_id = reinterpret_cast<void*>(map->getIcon()->get());
+            float my_tex_w = ImGui::GetWindowHeight() / 5.f * ((float)map->getWidth() / (float)map->getHeight());
+            float my_tex_h = ImGui::GetWindowHeight() / 5.f;
 
             ImVec2 size = ImVec2(my_tex_w, my_tex_h);               // Size of the image we want to make visible
             ImVec2 uv0 = ImVec2(0.0f, 1.0f);                            // UV coordinates for lower-left
