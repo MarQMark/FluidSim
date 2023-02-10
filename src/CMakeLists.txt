@@ -21,7 +21,28 @@ set(SOURCE_FILES
         file_browser/ImGuiFileBrowser.cpp
         ui/StatsViewer.cpp
         simulation/GridRenderSystem.cpp
-        simulation/SpriteRenderSystem.cpp simulation/ParticleRenderSystem.cpp)
+        simulation/SpriteRenderSystem.cpp
+        simulation/ParticleRenderSystem.cpp
+
+        #Kikan files
+        kikan/glew/glew.c
+        kikan/Engine.cpp
+        kikan/ecs/Scene.cpp
+        kikan/ecs/Entity.cpp
+        kikan/opengl/Renderer.cpp
+        kikan/ecs/systems/PhysicsSystem.cpp
+        kikan/ecs/TypeRegistry.cpp
+        kikan/opengl/Shader.cpp
+        kikan/opengl/batching/Batch.cpp
+        kikan/opengl/buffers/VertexBuffer.cpp
+        kikan/opengl/batching/AutoBatch.cpp
+        kikan/opengl/batching/ManuelBatch.cpp
+        kikan/opengl/VertexRegistry.cpp
+        kikan/opengl/buffers/IndexBuffer.cpp
+        kikan/opengl/buffers/Texture2D.cpp
+        kikan/ecs/systems/SpriteRenderSystem.cpp
+        kikan/opengl/Camera.cpp
+        kikan/input/Input.cpp)
 add_executable(FluidSim ${SOURCE_FILES})
 
 target_include_directories(FluidSim
@@ -52,11 +73,6 @@ add_custom_target(copy_assets ALL
         COMMENT "Copying assets into binary directory")
 add_dependencies(FluidSim copy_assets)
 
-#link Kikan
-find_library(LIB_Kikan
-        NAMES libKikan.a
-        PATHS ${PROJECT_SOURCE_DIR}/../lib)
-target_link_libraries(FluidSim ${LIB_Kikan})
 
 #define GLEW_STATIC (necessary for glew)
 add_compile_definitions(GLEW_STATIC)
