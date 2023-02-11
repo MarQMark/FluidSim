@@ -10,7 +10,8 @@ This is a fluid Simulation based on: <br> <i>Simon Clavet, Philippe Beaudoin, an
 # <p>Usage</p>
 
 <p>
-In order to run the simulation you have to compile it yourself. For that, you also need to compile glfw and add it to a folder called "lib".
+A Windows build already exists, however feel free to build it yourself. Please mind that you might be running into problems with MSVC.
+<br>For Linux, you have to build it yourself.
 <br> Both Windows and Linux should work, provided all libraries for OpenGL are installed.
 
 ## <p1>Loading Maps</p1>
@@ -28,9 +29,10 @@ You can use Images in order to create custom maps
 ![slope](https://user-images.githubusercontent.com/72945679/218122976-be7b6e75-9116-4fd5-a504-b1382f234736.png)
 ![BoxGrid](https://user-images.githubusercontent.com/72945679/218123009-57d061c2-b5fb-4e42-b735-7bede2c3b27c.png)
 
+#
 
-# <p>Notes</p>
+## <p>Side Notes</p>
 <p>
 This was supposed to be a small project but turned out to be a lot more complicated.
-Therefore please excuse that the simulation breaks from time to time and is in no way perfect.
+Therefore please excuse the bugs and the performance issues.
 </p>
