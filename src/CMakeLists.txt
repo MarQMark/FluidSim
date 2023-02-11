@@ -46,8 +46,10 @@ set(SOURCE_FILES
 add_executable(FluidSim ${SOURCE_FILES})
 
 target_include_directories(FluidSim
-        PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../external/glfw/include)
+
+target_link_directories(${PROJECT_NAME} PRIVATE external/glfw/src)
 
 #copy kikan shaders to target folder
 add_custom_target(copy_kikan_shaders ALL
@@ -77,18 +79,12 @@ add_dependencies(FluidSim copy_assets)
 #define GLEW_STATIC (necessary for glew)
 add_compile_definitions(GLEW_STATIC)
 
-#link GLFW
-find_library(LIB_GLFW
-        NAMES libglfw3.a
-        PATHS ${PROJECT_SOURCE_DIR}/../lib)
-target_link_libraries(FluidSim ${LIB_GLFW})
-
 #link all necessary libraries for opengl
 if (UNIX)
     find_package(OpenGL REQUIRED)
-    target_link_libraries(FluidSim glut GL dl X11 pthread)
+    target_link_libraries(FluidSim glut GL dl X11 pthread glfw)
 endif(UNIX)
 
 if (WIN32)
-    target_link_libraries(FluidSim opengl32)
+    target_link_libraries(FluidSim opengl32 glfw)
 endif(WIN32)
