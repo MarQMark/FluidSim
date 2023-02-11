@@ -64,6 +64,8 @@ void SimulationSystem::apply_controls(float dt) {
                             }
                         }
                     }
+
+                    update_neighbours();
                 }
                 _controls->SINGLE_SPAWN_SPAWNED = true;
 
@@ -103,7 +105,7 @@ void SimulationSystem::apply_controls(float dt) {
         _controls->RESET = false;
         _lost_ps = 0;
         for (int i = 0; i < _entities.size(); ++i) {
-            _scene->removeEntity(_entities[i]);
+            _scene->deleteEntity(_entities[i]);
             i--;
         }
     }
@@ -261,7 +263,7 @@ void SimulationSystem::update_stats() {
         auto* p = _entities[i]->getComponent<Particle>();
         if(std::isnan(p->pos.x) || std::isnan(p->pos.y)){
             _lost_ps++;
-            _scene->removeEntity(_entities[i]);
+            _scene->deleteEntity(_entities[i]);
             i--;
         }
     }

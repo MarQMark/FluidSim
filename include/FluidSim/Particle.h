@@ -9,6 +9,10 @@ public:
     glm::vec2 pos;
     glm::vec2 ppos;
     glm::vec2 vel;
+
+    void destroy() override{
+        delete this;
+    };
 };
 
 #endif //FLUIDSIM_PARTICLE_H

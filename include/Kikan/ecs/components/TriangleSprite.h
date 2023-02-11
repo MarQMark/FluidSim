@@ -9,6 +9,10 @@ namespace Kikan {
         glm::vec2 points[3];
         glm::vec4 color;
         float layer;
+
+        void destroy() override{
+            delete this;
+        };
     };
 }
 

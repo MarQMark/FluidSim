@@ -8,6 +8,10 @@ namespace Kikan {
     struct Physics : IComponent {
         glm::vec2 _velocity;
         glm::vec2 _acceleration;
+
+        void destroy() override{
+            delete this;
+        };
     };
 }
 
