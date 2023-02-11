@@ -19,7 +19,7 @@ namespace Kikan {
 
         ~Entity(){
             for(auto & _component : _components)
-                delete _component.second;
+                _component.second->destroy();
         }
 
         template<class T>

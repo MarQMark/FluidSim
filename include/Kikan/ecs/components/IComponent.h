@@ -3,7 +3,7 @@
 
 namespace Kikan {
     struct IComponent {
-
+        virtual void destroy() = 0;
     };
 }
 

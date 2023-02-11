@@ -29,11 +29,11 @@ namespace Kikan {
 
         virtual void update(double dt) = 0;
 
-        void virtual addEntity(Entity* entity){
+        virtual void addEntity(Entity* entity){
             _entities.push_back(entity);
         }
 
-        void virtual removeEntity(Entity* entity){
+        virtual void removeEntity(Entity* entity){
             for (int i = 0; i < (int)_entities.size(); ++i) {
                 if(_entities.at(i) == entity){
                     _entities.erase(_entities.begin() + i);
