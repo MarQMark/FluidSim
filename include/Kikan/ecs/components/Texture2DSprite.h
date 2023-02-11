@@ -11,6 +11,10 @@ namespace Kikan {
         glm::vec4 color;
         GLuint textureID;
         float layer;
+
+        void destroy() override{
+            delete this;
+        };
     };
 }
 
