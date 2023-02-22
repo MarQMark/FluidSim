@@ -1,4 +1,4 @@
-<h1 align="center">2D Particle-based Viscoelastic Fluid Simulation</h1>
+<h1 align="center">2D Particle-based Fluid Simulation</h1>
 
 # <p>Description</p>
 
